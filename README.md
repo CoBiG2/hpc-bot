@@ -16,7 +16,6 @@ A repository to host code to build a discord bot
 
 3. Install dependencies
     ```shell script
-    cd hpc-bot
     make upgrade-pip
     make install-dependencies
     ```
