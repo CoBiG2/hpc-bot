@@ -16,8 +16,7 @@ A repository to host code to build a discord bot
 
 3. Install dependencies
     ```shell script
-    make upgrade-pip
-    make install-dependencies
+    make upgrade-pip && install-dependencies
     ```
 3. Run
     ```shell script

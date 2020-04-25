@@ -6,7 +6,7 @@ goto %~1
 :help
 echo.
 echo commands:
-echo upgrade-pip                    intalls latest version of pip and setuptools
+echo upgrade-pip                    installs latest version of pip and setuptools
 echo install-dependencies           installs dependencies
 goto:eof
 
