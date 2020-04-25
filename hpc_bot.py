@@ -1,4 +1,4 @@
-#!python
+#!python3
 # coding: utf-8
 
 """
@@ -10,9 +10,9 @@ $ python hpc_bot.py <bot_token>
 
 import argparse
 import logging
+import socket
 import discord
 from discord.ext import commands
-
 
 # TODO add cogs
 # TODO help command
@@ -34,6 +34,7 @@ if __name__ == '__main__':
 
     # init bot
     bot = commands.Bot(command_prefix=commands.when_mentioned)  # bot only reacts when mentioned: @<bot_name> <command>
+    bot.server_name = socket.gethostname()
     bot.help_command = commands.MinimalHelpCommand()
 
     @bot.event
@@ -46,6 +47,11 @@ if __name__ == '__main__':
     async def test(ctx):
         await ctx.send('tested')
 
+    @bot.command()
+    async def name(ctx):
+        await ctx.send(f'server name: {ctx.bot.server_name}')
+
     logger.info('Starting bot')
     bot.run(cli.token)
+    logger.info('bot shutdown complete')
 
