@@ -3,7 +3,7 @@
 help:
 	@echo ""
 	@echo "commands:"
-	@echo "install-python"              installs python 3.8 in $HOME/python38 (updates PATH in .bashrc)"
+	@echo "install-python               installs python 3.8 in $HOME/python38 (updates PATH in .bashrc)"
 	@echo "upgrade-pip                  intalls latest version of pip and setuptools"
 	@echo "install-dependencies         installs dependencies"
 
