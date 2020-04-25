@@ -8,10 +8,10 @@ help:
 	@echo "install-dependencies         installs dependencies"
 
 install-conda-python:
-    wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
-    bash Miniconda3-latest-Linux-x86_64.sh
-    rm Miniconda3-latest-Linux-x86_64.sh
-    conda install -c anaconda python=3.8
+	wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+	bash Miniconda3-latest-Linux-x86_64.sh
+	rm Miniconda3-latest-Linux-x86_64.sh
+	conda install -c anaconda python=3.8
 	@echo "Miniconda3 and Python 3.8 successfully installed"
 
 upgrade-pip:
