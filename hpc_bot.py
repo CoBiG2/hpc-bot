@@ -1,11 +1,11 @@
-#!/usr/bin/python3
+#!python
 # coding: utf-8
 
 """
 hpc-bot - CoBiG² Discord server bot
 
 to run:
-$ python3 hpc_bot.py <bot_token>
+$ python hpc_bot.py <bot_token>
 """
 
 import argparse
@@ -49,4 +49,3 @@ if __name__ == '__main__':
     logger.info('Starting bot')
     bot.run(cli.token)
 
-    # NDAyOTAzODIwMTYzNzQzNzQ0.XqNfpA.GmXyZXDC_Aay7iezAsfwTpDM2Ek
