@@ -9,7 +9,7 @@ A repository to host code to build a discord bot
    
 2. Install python 3.8
     * Downloads [here](https://www.python.org/downloads/), installation instructions [here](https://docs.python.org/3.8/using/unix.html)
-    * Install to user space, on `Linux`, with:
+    * Alternatively, install to user space (on `Linux`) with:
         ```shell script
         make install-conda
         make install-python

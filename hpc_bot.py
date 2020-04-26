@@ -10,17 +10,13 @@ $ python hpc_bot.py <bot_token>
 
 import argparse
 import logging
-import socket
 import discord
 from discord.ext import commands
-
-# TODO add cogs
-# TODO help command
-# TODO get server name (machine where bot is running)
-# TODO command: sudo du -s -h /home/*
+import cogs
 
 
 if __name__ == '__main__':
+    # command line interface stuff
     cli = argparse.ArgumentParser(description='Run hpc-bot discord Bot')
     cli.add_argument('token', help='Bot token. Get one here: https://discordapp.com/developers/applications/me')
     cli = cli.parse_args()
@@ -32,26 +28,21 @@ if __name__ == '__main__':
     handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
     logger.addHandler(handler)
 
-    # init bot
+    # bot setup
     bot = commands.Bot(command_prefix=commands.when_mentioned)  # bot only reacts when mentioned: @<bot_name> <command>
-    bot.server_name = socket.gethostname()
+    bot.add_cog(cogs.Commands())
     bot.help_command = commands.MinimalHelpCommand()
 
+    # do some stuff when bot is ready
     @bot.event
     async def on_ready():
         await bot.change_presence(activity=discord.Game("Type @{} help".format(bot.user.name)))
         logger.info('Logged in as: %s, (id: %s)' % (bot.user.name, bot.user.id))
         logger.info('Bot is ready')
 
-    @bot.command()
-    async def test(ctx):
-        await ctx.send('tested')
-
-    @bot.command()
-    async def name(ctx):
-        await ctx.send(f'server name: {ctx.bot.server_name}')
-
+    # start bot
     logger.info('Starting bot')
     bot.run(cli.token)
     logger.info('bot shutdown complete')
 
+    # TODO help command (based on commands.MinimalHelpCommand)
