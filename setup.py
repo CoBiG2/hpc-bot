@@ -33,7 +33,7 @@ if sys.version_info.major < 3:
 
 
 # Set some variables (PKGBUILD inspired)
-VERSION = "1.3.5"
+VERSION = "0.1.1"
 URL = "https://github.com/CoBiG2/hpc-bot"
 
 
