@@ -19,11 +19,15 @@ import cogs
 BOT_TEXT_CHANNEL = 'bot-test'
 LOG_FILE = 'bot.log'
 
-
-if __name__ == '__main__':
+def main():
+    """
+    Main bot function. Just ported from imperative code.
+    """
     # command line interface stuff
     cli = argparse.ArgumentParser(description='Run hpc-bot discord Bot')
-    cli.add_argument('token', help='Bot token. Get one here: https://discordapp.com/developers/applications/me')
+    cli.add_argument('token',
+                     help='Bot token. Get one here: \
+                           https://discordapp.com/developers/applications/me')
     cli = cli.parse_args()
 
     # logging stuff
@@ -67,6 +71,10 @@ if __name__ == '__main__':
     bot.run(cli.token)
     logger.info('bot shutdown complete')
 
-    # TODO help command (based on commands.MinimalHelpCommand)
-    # TODO what to do on bot crash
-    # TODO what to do on machine restart (auto-run)
+
+if __name__ == '__main__':
+    main()
+
+# TODO help command (based on commands.MinimalHelpCommand)
+# TODO what to do on bot crash
+# TODO what to do on machine restart (auto-run)
