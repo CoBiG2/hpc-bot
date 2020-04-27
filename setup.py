@@ -40,9 +40,9 @@ URL = "https://github.com/CoBiG2/hpc-bot"
 setup(
     name="hpc-bot",
     version=VERSION,
-    packages=["hpc-bot",
-              "hpc-bot.cogs",
-              "hpc-bot.checks"],
+    packages=["hpc_bot",
+              "hpc_bot.cogs",
+              "hpc_bot.checks"],
     install_requires=["discord.py==1.3.*"],
     description=("A discord bot to relay CoBiG2 HPC information."),
     url=URL,
@@ -59,7 +59,7 @@ setup(
                  "Programming Language :: Python :: 3.8"],
     entry_points={
         "console_scripts": [
-            "hpc-bot = hpc-bot.hpc_bot:main",
+            "hpc-bot = hpc_bot.hpc_bot:main",
         ]
     },
 )
