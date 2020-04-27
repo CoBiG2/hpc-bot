@@ -9,8 +9,10 @@ $ python hpc_bot.py <bot_token>
 """
 
 import argparse
+import json
 import logging
 import discord
+import os
 from discord.ext import commands
 
 try:
@@ -19,9 +21,56 @@ except ImportError:
     import hpc_bot.cogs as cogs
 
 
-# TODO config file (bot text channel, server name, logfile)
-BOT_TEXT_CHANNEL = 'hpc-bots'
-LOG_FILE = 'bot.log'
+def config_parser(cli):
+    """
+    Parses the simple JSON config file and modifies options accordingly
+    """
+    with open(os.path.abspath(cli.config)) as config_data:
+        configs = json.load(config_data)
+
+    if cli.TOKEN is None:
+        cli.TOKEN = configs["token"]
+
+    if cli.LOG_FILE is None:
+        cli.LOG_FILE = os.path.abspath(os.path.expanduser(configs["log"]))
+    if os.path.isdir(os.path.dirname(cli.LOG_FILE)) is False:
+        os.makedirs(os.path.dirname(cli.LOG_FILE))
+
+    if cli.BOT_TEXT_CHANNEL is None:
+        cli.BOT_TEXT_CHANNEL = configs["BOT_TEXT_CHANNEL"]
+
+    return cli
+
+
+def arguments_handler():
+    """
+    Handles argument parsing
+    """
+    cli = argparse.ArgumentParser(description='Run hpc-bot discord Bot')
+    cli.add_argument('-t',
+                     dest="TOKEN",
+                     help='Bot token. Get one here: \
+                           https://discordapp.com/developers/applications/me')
+    cli.add_argument('-c',
+                     dest="config",
+                     help='Config file location',
+                     default=None)
+
+    cli.add_argument('-l',
+                     dest="LOG_FILE",
+                     help='Log file location. Default is "./bot.log"')
+
+    cli.add_argument('-tc',
+                     dest="BOT_TEXT_CHANNEL",
+                     help='Text channel to join in discrod',
+                     default=None)
+
+    cli = cli.parse_args()
+
+    if cli.config is not None:
+        cli = config_parser(cli)
+
+    return cli
 
 
 def main():
@@ -29,16 +78,12 @@ def main():
     Main bot function. Just ported from imperative code.
     """
     # command line interface stuff
-    cli = argparse.ArgumentParser(description='Run hpc-bot discord Bot')
-    cli.add_argument('token',
-                     help='Bot token. Get one here: \
-                           https://discordapp.com/developers/applications/me')
-    cli = cli.parse_args()
+    cli = arguments_handler()
 
     # logging stuff
     logging.basicConfig(level=logging.INFO)
     logger = logging.getLogger('discord')
-    handler = logging.FileHandler(filename=LOG_FILE, encoding='utf-8', mode='a')
+    handler = logging.FileHandler(filename=cli.LOG_FILE, encoding='utf-8', mode='a')
     handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
     logger.addHandler(handler)
 
@@ -62,18 +107,18 @@ def main():
         else:
             bot.bot_text_channel = ''
             for text_channel in bot.guilds[0].text_channels:
-                if text_channel.name == BOT_TEXT_CHANNEL:
+                if text_channel.name == cli.BOT_TEXT_CHANNEL:
                     bot.bot_text_channel = text_channel
                     break
             if not bot.bot_text_channel:
-                logger.error('No text channel named "{}" exists on the server'.format(BOT_TEXT_CHANNEL))
+                logger.error('No text channel named "{}" exists on the server'.format(cli.BOT_TEXT_CHANNEL))
                 await bot.logout()
             else:
                 logger.info('Bot is ready')
 
     # start bot
     logger.info('Starting bot')
-    bot.run(cli.token)
+    bot.run(cli.TOKEN)
     logger.info('bot shutdown complete')
 
 
