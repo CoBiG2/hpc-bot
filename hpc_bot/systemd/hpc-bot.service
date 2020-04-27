@@ -1,0 +1,12 @@
+[Unit]
+Description=HPC-bot for Discord
+After=network.target
+
+[Service]
+Type=simple
+User=discbot
+Group=nobody
+ExecStart=/usr/bin/hpc_bot
+
+[Install]
+WantedBy=multi-user.target
