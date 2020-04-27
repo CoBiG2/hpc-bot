@@ -15,6 +15,9 @@
 # You should have received a copy of the GNU General Public License
 # along with hpc-bot. If not, see <http://www.gnu.org/licenses/>.
 
+"""
+hpc-bot setup
+"""
 
 import sys
 try:
@@ -25,15 +28,16 @@ except ImportError:
     from setuptools import setup
 
 
-class NotSupportedException(BaseException): pass
+class NotSupportedException(BaseException):
+    pass
 
 
-if sys.version_info.major < 3:
-    raise NotSupportedException("Only Python 3.x Supported")
+if float("{}.{}".format(sys.version_info.major, sys.version_info.minor)) < 3.8:
+    raise NotSupportedException("Only Python 3.8 or higher is supported")
 
 
 # Set some variables (PKGBUILD inspired)
-VERSION = "0.1.1"
+VERSION = "0.1.1a"
 URL = "https://github.com/CoBiG2/hpc-bot"
 
 
@@ -44,15 +48,13 @@ setup(
               "hpc_bot.cogs",
               "hpc_bot.checks"],
     install_requires=["discord.py==1.3.*"],
-    description=("A discord bot to relay CoBiG2 HPC information."),
+    description="A discord bot to relay CoBiG2 HPC information.",
     url=URL,
     download_url="{0}/-/archive/{1}/hpc_bot-{1}.tar.gz".format(URL, VERSION),
-    author="KronoPT",
-    author_email="stub.email@provider.com",
+    author="Kronopt",
     license="GPL3",
     classifiers=["Intended Audience :: Science/Research",
-                 "License :: OSI Approved :: GNU General Public License v3 ("
-                 "GPLv3)",
+                 "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
                  "Natural Language :: English",
                  "Operating System :: POSIX :: Linux",
                  "Programming Language :: Python :: 3 :: Only",
