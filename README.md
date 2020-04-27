@@ -22,5 +22,5 @@ A repository to host code to build a discord bot
     ```
 3. Run
     ```shell script
-    python hpc_bot.py <bot_token>
+    python hpc_bot\hpc_bot.py <bot_token>
     ```
