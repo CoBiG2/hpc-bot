@@ -16,12 +16,13 @@ from discord.ext import commands
 try:
     import cogs
 except ImportError:
-    import hpc_bot.cogs
+    import hpc_bot.cogs as cogs
 
 
 # TODO config file (bot text channel, server name, logfile)
 BOT_TEXT_CHANNEL = 'hpc-bots'
 LOG_FILE = 'bot.log'
+
 
 def main():
     """

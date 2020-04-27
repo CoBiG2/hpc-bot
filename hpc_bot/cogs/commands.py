@@ -16,7 +16,8 @@ from discord.ext import commands
 try:
     import checks
 except ImportError:
-    from hpc_bot.checks import *
+    import hpc_bot.checks as checks
+
 
 class Commands(commands.Cog):
 
