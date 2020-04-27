@@ -12,7 +12,11 @@ import socket
 import discord
 from functools import partial
 from discord.ext import commands
-import checks
+
+try:
+    import checks
+except ImportError:
+    import hpc_bot.checks as checks
 
 
 class Commands(commands.Cog):
