@@ -20,7 +20,7 @@ except ImportError:
 
 
 # TODO config file (bot text channel, server name, logfile)
-BOT_TEXT_CHANNEL = 'bot-test'
+BOT_TEXT_CHANNEL = 'hpc-bots'
 LOG_FILE = 'bot.log'
 
 def main():
