@@ -10,8 +10,11 @@ import logging
 import signal
 import socket
 from discord.ext import commands
-import checks
 
+try:
+    import checks
+except ImportError:
+    from hpc_bot.checks import *
 
 class Commands(commands.Cog):
 

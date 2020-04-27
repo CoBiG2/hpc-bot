@@ -12,7 +12,11 @@ import argparse
 import logging
 import discord
 from discord.ext import commands
-import cogs
+
+try:
+    import cogs
+except ImportError:
+    import hpc_bot.cogs
 
 
 # TODO config file (bot text channel, server name, logfile)
