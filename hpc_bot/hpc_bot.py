@@ -11,9 +11,13 @@ $ python hpc_bot.py <bot_token>
 import argparse
 import json
 import logging
-import discord
 import os
+import socket
+import discord
+import requests
+from io import BytesIO
 from discord.ext import commands
+from PIL import Image
 
 try:
     import cogs
@@ -58,12 +62,13 @@ def arguments_handler():
 
     cli.add_argument('-l',
                      dest="LOG_FILE",
-                     help='Log file location. Default is "./bot.log"')
+                     help='Log file location. Default is "./bot.log"',
+                     default='bot.log')
 
     cli.add_argument('-tc',
                      dest="BOT_TEXT_CHANNEL",
-                     help='Text channel to join in discrod',
-                     default=None)
+                     help='Text channel to join in discord',
+                     default='hpc-bots')
 
     cli = cli.parse_args()
 
@@ -91,6 +96,16 @@ def main():
     bot = commands.Bot(command_prefix=commands.when_mentioned)  # bot only reacts when mentioned: @<bot_name> <command>
     bot.add_cog(cogs.Commands(bot))
     bot.help_command = commands.MinimalHelpCommand()
+    bot.server_name = socket.gethostname()
+
+    # bot server color
+    image_request = requests.get(f'https://raw.githubusercontent.com/CoBiG2/hpc-bot/{bot.server_name}/img.png')
+    if image_request.status_code == 200:
+        server_image = Image.open(BytesIO(image_request.content))
+    else:  # default image if request from github fails
+        server_image = Image.open('hpc_bot/img/img.png')
+    image_color = server_image.resize((1, 1)).getpixel((0, 0))[:-1]  # average pixel color
+    bot.color = discord.Color.from_rgb(*image_color)
 
     # do some stuff when bot is ready
     @bot.event

@@ -8,7 +8,6 @@ Commands Cog - bot commands
 import asyncio
 import logging
 import signal
-import socket
 import discord
 from functools import partial
 from discord.ext import commands
@@ -24,7 +23,6 @@ class Commands(commands.Cog):
     def __init__(self, bot):
         super().__init__()
         self.bot = bot
-        self.server_name = socket.gethostname()
         self.logger = logging.getLogger(__name__)
         self.home_embed = None
         self.home_message_sent = None
@@ -46,7 +44,7 @@ class Commands(commands.Cog):
         Server(s) name(s)
         Name of the server(s) where the bot is running
         """
-        await ctx.send(self.server_name)
+        await ctx.send(self.bot.server_name)
 
     @commands.command()
     @commands.max_concurrency(1)
@@ -146,12 +144,12 @@ class Commands(commands.Cog):
         """Generates a new default embed for the home command"""
         return discord.Embed(
             title="size of all __home__ folders:",
-            color=discord.Color.teal(),  # TODO how to set colours independently of server? Have the colour on github?
+            color=self.bot.color,
         ).set_footer(
             text=f'{command_name} 🏠'
         ).set_author(
-            name=self.server_name,
-            icon_url=f"https://github.com/CoBiG2/hpc-bot/raw/{self.server_name}/img.png"  # TODO config this
+            name=self.bot.server_name,
+            icon_url=f"https://github.com/CoBiG2/hpc-bot/raw/{self.bot.server_name}/img.png"  # TODO config this
         )
 
     async def run_shell_cmd(self, ctx, cmd, handle_output_line):
