@@ -35,7 +35,8 @@ class Commands(commands.Cog):
 
     async def cog_command_error(self, ctx, error):
         """Called when an error is raised inside this cog"""
-        self.logger.error(error)
+        if not isinstance(error, commands.MaxConcurrencyReached):
+            self.logger.error(error)
 
     @commands.command()
     async def name(self, ctx):
@@ -46,6 +47,7 @@ class Commands(commands.Cog):
         await ctx.send(f'server name: {self.server_name}')
 
     @commands.command()
+    @commands.max_concurrency(1)
     @commands.check(checks.can_write_to_bot_text_channel())
     async def status(self, ctx):
         """
@@ -100,6 +102,7 @@ class Commands(commands.Cog):
         #   - edit that message with the output of the command as it is being read
 
     @commands.command()
+    @commands.max_concurrency(1)
     @commands.check(checks.can_write_to_bot_text_channel())
     async def home(self, ctx):
         """
