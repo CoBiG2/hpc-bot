@@ -47,7 +47,7 @@ def dynamic_datafiles():
 
     if sys.platform == "linux":
         service_file = "hpc_bot/systemd/hpc-bot.service"
-        data_files.append(("lib/systemd/system", [service_file]))
+        data_files.append(("lib/systemd/user", [service_file]))
 
     return data_files
 
