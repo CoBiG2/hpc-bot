@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 
 # Copyright 2020 Francisco Pina Martins <f.pinamartins@gmail.com>
 # This file is part of hpc-bot.
@@ -36,8 +36,24 @@ if float("{}.{}".format(sys.version_info.major, sys.version_info.minor)) < 3.8:
     raise NotSupportedException("Only Python 3.8 or higher is supported")
 
 
+def dynamic_datafiles():
+    """
+    Detect the platform and set systemd service file for installation if
+    required.
+    """
+
+    config_file = ("etc/hpc_bot", ["hpc_bot/config/hpc_botrc.json"])
+    data_files = [config_file]
+
+    if sys.platform == "linux":
+        service_file = "hpc_bot/systemd/hpc-bot.service"
+        data_files.append(("share/systemd/user", [service_file]))
+
+    return data_files
+
+
 # Set some variables (PKGBUILD inspired)
-VERSION = "0.1.1a"
+VERSION = "0.2.0"
 URL = "https://github.com/CoBiG2/hpc-bot"
 
 
@@ -59,6 +75,7 @@ setup(
                  "Operating System :: POSIX :: Linux",
                  "Programming Language :: Python :: 3 :: Only",
                  "Programming Language :: Python :: 3.8"],
+    data_files=dynamic_datafiles(),
     entry_points={
         "console_scripts": [
             "hpc-bot = hpc_bot.hpc_bot:main",
