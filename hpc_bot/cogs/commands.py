@@ -26,6 +26,8 @@ class Commands(commands.Cog):
         self.bot = bot
         self.server_name = socket.gethostname()
         self.logger = logging.getLogger(__name__)
+        self.home_embed = None
+        self.home_message_sent = None
 
     async def cog_before_invoke(self, ctx):
         """Called before each command invocation"""
@@ -39,12 +41,12 @@ class Commands(commands.Cog):
             self.logger.error(error)
 
     @commands.command()
-    async def name(self, ctx):
+    async def servers(self, ctx):
         """
-        Server name
-        Name of the server where the bot is running
+        Server(s) name(s)
+        Name of the server(s) where the bot is running
         """
-        await ctx.send(f'server name: {self.server_name}')
+        await ctx.send(self.server_name)
 
     @commands.command()
     @commands.max_concurrency(1)
@@ -52,7 +54,7 @@ class Commands(commands.Cog):
     async def status(self, ctx):
         """
         Server status
-        CPU, RAM and total disk usage
+        CPU, RAM and total disk usage of the server(s)
         """
         command_cpu_and_uptime = 'uptime'
         command_ram_and_swap = 'free -gh'
@@ -106,11 +108,21 @@ class Commands(commands.Cog):
     @commands.check(checks.can_write_to_bot_text_channel())
     async def home(self, ctx):
         """
-        Space usage of home folders
-        Total space occupied by each user's home folder on each server
+        Home folders disk space usage
+        Total space occupied by each user's home folder on the server(s)
         """
         command = 'sudo du -sh /home/*'
+
+        # because only one instance of this command can run at a time, saving these attributes
+        # and editing them is ok, because there's no risk of them being accessed from another place
+        self.home_embed = self.new_home_embed("home")
+        self.home_message_sent = await self.bot.bot_text_channel.send(embed=self.home_embed)
+
         await self.run_shell_cmd(ctx, command, self.handle_home)
+
+        # reset variables
+        self.home_embed = None
+        self.home_message_sent = None
 
     async def handle_home(self, ctx, line):
         """
@@ -123,12 +135,24 @@ class Commands(commands.Cog):
         line: str
             line of command output
         """
-        await self.bot.bot_text_channel.send(line)
+        line_contents = line.split('/')
+        usage = line_contents[0].rstrip()
+        user = line_contents[-1]
 
-        # TODO embed
-        # TODO:
-        #   - see if there's a "home" message from this server/machine (if not create one)
-        #   - edit that message with the output of the command as it is being read
+        await self.home_message_sent.edit(embed=self.home_embed.add_field(
+            name=user, value=usage, inline=True))
+
+    def new_home_embed(self, command_name):
+        """Generates a new default embed for the home command"""
+        return discord.Embed(
+            title="size of all __home__ folders:",
+            color=discord.Color.teal(),  # TODO how to set colours independently of server? Have the colour on github?
+        ).set_footer(
+            text=f'{command_name} 🏠'
+        ).set_author(
+            name=self.server_name,
+            icon_url=f"https://github.com/CoBiG2/hpc-bot/raw/{self.server_name}/img.png"  # TODO config this
+        )
 
     async def run_shell_cmd(self, ctx, cmd, handle_output_line):
         """
