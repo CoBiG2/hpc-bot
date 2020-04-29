@@ -7,6 +7,7 @@ Commands Cog - bot commands
 
 import asyncio
 import logging
+import random
 import signal
 import discord
 from functools import partial
@@ -26,6 +27,7 @@ class Commands(commands.Cog):
         self.logger = logging.getLogger(__name__)
         self.home_embed = None
         self.home_message_sent = None
+        random.seed(self.bot.server_name)
 
     async def cog_before_invoke(self, ctx):
         """Called before each command invocation"""
@@ -165,7 +167,7 @@ class Commands(commands.Cog):
         handle_output_line: function
             function to handle each line of output produced by the command
         """
-        async with ctx.channel.typing():
+        async with ctx.channel.typing(), self.bot.bot_text_channel.typing():
             process = await asyncio.create_subprocess_shell(
                 cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
 
@@ -174,6 +176,7 @@ class Commands(commands.Cog):
                 line_read = await process.stdout.readline()
                 line = line_read.decode('utf-8').rstrip()
                 if line:
+                    await asyncio.sleep(random.random())  # handles rate limit when using multiple servers
                     await handle_output_line(ctx, line)
 
             # no error while running the command
