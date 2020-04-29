@@ -27,21 +27,19 @@ except ImportError:
 
 def config_parser(cli):
     """
-    Parses the simple JSON config file and modifies options accordingly
+    Parses the config file and modifies options accordingly
     """
     with open(os.path.abspath(cli.config)) as config_data:
         configs = json.load(config_data)
 
-    if cli.TOKEN is None:
-        cli.TOKEN = configs["token"]
-
-    if cli.LOG_FILE is None:
-        cli.LOG_FILE = os.path.abspath(os.path.expanduser(configs["log"]))
-    if os.path.isdir(os.path.dirname(cli.LOG_FILE)) is False:
-        os.makedirs(os.path.dirname(cli.LOG_FILE))
-
-    if cli.BOT_TEXT_CHANNEL is None:
-        cli.BOT_TEXT_CHANNEL = configs["BOT_TEXT_CHANNEL"]
+    if cli.token is None:
+        cli.token = configs['token']
+    if cli.log_file is None:
+        cli.log_file = os.path.abspath(os.path.expanduser(configs['log']))
+    if os.path.isdir(os.path.dirname(cli.log_file)) is False:
+        os.makedirs(os.path.dirname(cli.log_file))
+    if cli.bot_text_channel is None:
+        cli.bot_text_channel = configs['bot_text_channel']
 
     return cli
 
@@ -52,24 +50,21 @@ def arguments_handler():
     """
     cli = argparse.ArgumentParser(description='Run hpc-bot discord Bot')
     cli.add_argument('-t',
-                     dest="TOKEN",
+                     dest='token',
                      help='Bot token. Get one here: \
                            https://discordapp.com/developers/applications/me')
     cli.add_argument('-c',
-                     dest="config",
+                     dest='config',
                      help='Config file location',
                      default=None)
-
     cli.add_argument('-l',
-                     dest="LOG_FILE",
+                     dest='log_file',
                      help='Log file location. Default is "./bot.log"',
                      default='bot.log')
-
     cli.add_argument('-tc',
-                     dest="BOT_TEXT_CHANNEL",
+                     dest='bot_text_channel',
                      help='Text channel to join in discord',
                      default='hpc-bots')
-
     cli = cli.parse_args()
 
     if cli.config is not None:
@@ -80,7 +75,7 @@ def arguments_handler():
 
 def main():
     """
-    Main bot function. Just ported from imperative code.
+    Main bot function. Just ported from imperative code
     """
     # command line interface stuff
     cli = arguments_handler()
@@ -88,7 +83,7 @@ def main():
     # logging stuff
     logging.basicConfig(level=logging.INFO)
     logger = logging.getLogger('discord')
-    handler = logging.FileHandler(filename=cli.LOG_FILE, encoding='utf-8', mode='a')
+    handler = logging.FileHandler(filename=cli.log_file, encoding='utf-8', mode='a')
     handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
     logger.addHandler(handler)
 
@@ -110,7 +105,7 @@ def main():
     # do some stuff when bot is ready
     @bot.event
     async def on_ready():
-        await bot.change_presence(activity=discord.Game('Type @{} help'.format(bot.user.name)))
+        await bot.change_presence(activity=discord.Game(f'Type @{bot.user.name} help'))
         logger.info('Logged in as: %s, (id: %s)' % (bot.user.name, bot.user.id))
 
         # check how many servers this bot is connected to (should only be one)
@@ -122,18 +117,18 @@ def main():
         else:
             bot.bot_text_channel = ''
             for text_channel in bot.guilds[0].text_channels:
-                if text_channel.name == cli.BOT_TEXT_CHANNEL:
+                if text_channel.name == cli.bot_text_channel:
                     bot.bot_text_channel = text_channel
                     break
             if not bot.bot_text_channel:
-                logger.error('No text channel named "{}" exists on the server'.format(cli.BOT_TEXT_CHANNEL))
+                logger.error(f'No text channel named "{cli.bot_text_channel}" exists on the server')
                 await bot.logout()
             else:
                 logger.info('Bot is ready')
 
     # start bot
     logger.info('Starting bot')
-    bot.run(cli.TOKEN)
+    bot.run(cli.token)
     logger.info('bot shutdown complete')
 
 
@@ -143,3 +138,4 @@ if __name__ == '__main__':
 # TODO help command (based on commands.MinimalHelpCommand)
 # TODO what to do on bot crash
 # TODO what to do on machine restart (auto-run)
+# TODO builtin alternative to requests to fetch bot image?

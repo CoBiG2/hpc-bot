@@ -1,5 +1,5 @@
 {
   "log": "~/.local/var/hpc_bot/hpc-bot.log",
   "token": "ADD TOKEN (see https://discordapp.com/developers/applications/me')",
-  "BOT_TEXT_CHANNEL": "ADD CHANNEL HERE"
+  "bot_text_channel": "ADD CHANNEL HERE"
 }
