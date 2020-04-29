@@ -178,8 +178,8 @@ class Commands(commands.Cog):
 
             # no error while running the command
             if process.returncode == 0:
-                await ctx.send("Command `{}` finished running successfully".format(ctx.command.name))
-                # TODO every server will send this message...
+                await ctx.send(f'Command `{ctx.command.name}` '
+                               f'finished running successfully on `{self.bot.server_name}`')
 
             # errors
             else:
@@ -188,18 +188,16 @@ class Commands(commands.Cog):
                 # signal terminated
                 if process.returncode < 0:
                     signal_code = abs(process.returncode)
-                    await ctx.send("Error: command `{}` terminated by signal `{} ({})`".format(
-                        ctx.command.name,
-                        signal_code,
-                        signal.Signals(signal_code).name))
-                    # TODO every server will send this message...
+                    await ctx.send(f"Error: command `{ctx.command.name}` "
+                                   f"terminated by signal `{signal_code}` "
+                                   f"({signal.Signals(signal_code).name}) `"
+                                   f"on `{self.bot.server_name}`")
 
                 # error return code
                 else:
-                    await ctx.send("Error: command `{}` terminated with error code `{}`".format(
-                        ctx.command.name,
-                        process.returncode))
-                    # TODO every server will send this message...
+                    await ctx.send(f"Error: command `{ctx.command.name}` "
+                                   f"terminated with error code `{process.returncode}` "
+                                   f"on `{self.bot.server_name}`")
                     # TODO find a way to get return code name with python...
 
                 self.logger.error(stderr.decode('utf-8').rstrip())
