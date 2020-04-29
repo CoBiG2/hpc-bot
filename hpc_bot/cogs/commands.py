@@ -138,6 +138,7 @@ class Commands(commands.Cog):
         usage = line_contents[0].rstrip()
         user = line_contents[-1]
 
+        await asyncio.sleep(random.random() + 4)  # handles rate limit when using multiple servers
         await self.home_message_sent.edit(embed=self.home_embed.add_field(
             name=user, value=usage, inline=True))
 
@@ -175,7 +176,6 @@ class Commands(commands.Cog):
                 line_read = await process.stdout.readline()
                 line = line_read.decode('utf-8').rstrip()
                 if line:
-                    await asyncio.sleep(random.random() + 3)  # handles rate limit when using multiple servers
                     await handle_output_line(ctx, line)
 
             # no error while running the command
