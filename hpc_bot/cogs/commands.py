@@ -7,6 +7,7 @@ Commands Cog - bot commands
 
 import asyncio
 import logging
+import random
 import signal
 import discord
 from functools import partial
