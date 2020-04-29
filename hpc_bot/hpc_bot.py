@@ -12,6 +12,7 @@ import argparse
 import json
 import logging
 import os
+import random
 import socket
 import discord
 import requests
@@ -92,6 +93,7 @@ def main():
     bot.add_cog(cogs.Commands(bot))
     bot.help_command = commands.MinimalHelpCommand()
     bot.server_name = socket.gethostname()
+    random.seed(bot.server_name)
 
     # bot server color
     image_request = requests.get(f'https://raw.githubusercontent.com/CoBiG2/hpc-bot/{bot.server_name}/img.png')

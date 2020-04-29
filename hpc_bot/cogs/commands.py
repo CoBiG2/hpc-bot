@@ -7,7 +7,6 @@ Commands Cog - bot commands
 
 import asyncio
 import logging
-import random
 import signal
 import discord
 from functools import partial
@@ -27,7 +26,6 @@ class Commands(commands.Cog):
         self.logger = logging.getLogger(__name__)
         self.home_embed = None
         self.home_message_sent = None
-        random.seed(self.bot.server_name)
 
     async def cog_before_invoke(self, ctx):
         """Called before each command invocation"""
