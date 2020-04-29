@@ -167,7 +167,7 @@ class Commands(commands.Cog):
         handle_output_line: function
             function to handle each line of output produced by the command
         """
-        async with ctx.channel.typing(), self.bot.bot_text_channel.typing():
+        async with self.bot.bot_text_channel.typing():
             process = await asyncio.create_subprocess_shell(
                 cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
 
