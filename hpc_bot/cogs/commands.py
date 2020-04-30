@@ -175,7 +175,8 @@ class Commands(commands.Cog):
                 line_read = await process.stdout.readline()
                 line = line_read.decode('utf-8').rstrip()
                 if line:
-                    await asyncio.sleep(random.random() * 6+2)  # handles rate limit when using multiple servers
+                    if self.bot.servers > 1:  # handles rate limit when using multiple servers
+                        await asyncio.sleep(random.random() * (self.bot.servers*2) + (self.bot.servers*0.6))
                     await handle_output_line(ctx, line)
 
             # no error while running the command

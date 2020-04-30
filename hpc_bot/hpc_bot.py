@@ -41,6 +41,8 @@ def config_parser(cli):
         os.makedirs(os.path.dirname(cli.log_file))
     if cli.bot_text_channel is None:
         cli.bot_text_channel = configs['bot_text_channel']
+    if cli.servers is None:
+        cli.servers = configs['servers']
 
     return cli
 
@@ -66,6 +68,10 @@ def arguments_handler():
                      dest='bot_text_channel',
                      help='Text channel to join in discord',
                      default='hpc-bots')
+    cli.add_argument('-s',
+                     dest='servers',
+                     help='How many servers are using this token (handling rate-limits)',
+                     default=1)
     cli = cli.parse_args()
 
     if cli.config is not None:
@@ -93,6 +99,7 @@ def main():
     bot.add_cog(cogs.Commands(bot))
     bot.help_command = commands.MinimalHelpCommand()
     bot.server_name = socket.gethostname()
+    bot.servers = cli.servers
     random.seed(bot.server_name)
 
     # bot server color
