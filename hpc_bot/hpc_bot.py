@@ -29,7 +29,6 @@ import logging
 import os
 import socket
 import discord
-import requests
 from io import BytesIO
 from discord.ext import commands
 from PIL import Image
@@ -54,8 +53,8 @@ def config_parser(cli, cli_parsed):
         cli_parsed.token = configs['token']
     if 'name' in configs and cli_parsed.name == cli.get_default('name'):
         cli_parsed.name = configs['name']
-    if 'image' in configs and cli_parsed.image == cli.get_default('image'):
-        cli_parsed.image = configs['image']
+    if 'avatar' in configs and cli_parsed.avatar == cli.get_default('avatar'):
+        cli_parsed.avatar = configs['avatar']
     if 'bot_text_channel' in configs and cli_parsed.bot_text_channel == cli.get_default('bot_text_channel'):
         cli_parsed.bot_text_channel = configs['bot_text_channel']
     if 'log' in configs and cli_parsed.log == cli.get_default('log'):
@@ -85,10 +84,11 @@ def arguments_handler():
                      help="Bot name. Default is computer host name (in this case: "
                           f"'{socket.gethostname()}')",
                      default=socket.gethostname())
-    cli.add_argument('-i',
-                     dest='image',
-                     help='Bot image location. Default is "./hpc_bot/img/img.png"',
-                     default='hpc_bot/img/img.png')
+    cli.add_argument('-a',
+                     dest='avatar',
+                     help="Bot avatar image location (only .jpeg or .png). Sets bot avatar. "
+                          "Ignoring this argument will leave your bot's avatar unchanged",
+                     default='')
     cli.add_argument('-tc',
                      dest='bot_text_channel',
                      help='Text channel where bot will send its messages. Default is "hpc-bots"',
@@ -108,6 +108,17 @@ def arguments_handler():
         cli.error('Bot token is required for bot to run')
 
     return cli_parsed
+
+
+def update_bot_color(image):
+    """
+    Generates a new bot color
+
+    image is a filename (string), pathlib.Path object or a file object
+    """
+    image_read = Image.open(image)
+    image_color = image_read.resize((1, 1)).getpixel((0, 0))[:-1]  # average pixel color
+    return discord.Color.from_rgb(*image_color)
 
 
 def main():
@@ -132,22 +143,9 @@ def main():
     bot.server_name = cli.name
     bot.bot_text_channel = cli.bot_text_channel
 
-    # bot server color
-    # # TODO use only local image
-    image_request = requests.get(f'https://raw.githubusercontent.com/CoBiG2/hpc-bot/{bot.server_name}/img.png')
-    if image_request.status_code == 200:
-        server_image = Image.open(BytesIO(image_request.content))
-    else:  # default image if request from github fails
-        server_image = Image.open(cli.image)
-    image_color = server_image.resize((1, 1)).getpixel((0, 0))[:-1]  # average pixel color
-    bot.color = discord.Color.from_rgb(*image_color)
-
-    # do some stuff when bot is ready
+    # do some stuff when bot connects to discord (but is not ready yet)
     @bot.event
-    async def on_ready():
-        await bot.change_presence(activity=discord.Game(f'Type @{bot.user.name} help'))
-        logger.info('Logged in as: %s, (id: %s)' % (bot.user.name, bot.user.id))
-
+    async def on_connect():
         # check how many servers this bot is connected to (should only be one)
         if len(bot.guilds) > 1:
             logger.error('Bot can only be active on a single discord server')
@@ -164,13 +162,39 @@ def main():
                                f'No messages will be sent by the bot until this channel exists')
         logger.info('Bot is ready')
 
+        if cli.avatar:
+            # set bot avatar if image path was defined
+            with open(cli.avatar, 'rb') as avatar_image:
+                await bot.user.edit(avatar_image.read())
+        else:
+            # fetch avatar image if there is no local image
+            cli.avatar = await bot.user.avatar_url_as(format='png').read()
+            cli.avatar = BytesIO(cli.avatar)
+
+        # bot server color (based on avatar color)
+        bot.color = update_bot_color(cli.avatar)
+
+    # when bot joins a new discord server checks how many it is connected to (it shouldn't be on more than one)
     @bot.event
     async def on_guild_join(guild):
-        # check how many servers this bot is connected to (should only be one)
         if len(bot.guilds) > 1:
             logger.error('Bot cannot join additional discord servers')
             logger.warning(f'Leaving guild {guild.name}...')
             await guild.leave()
+
+    # updates bot color on bot avatar change
+    @bot.event
+    async def on_user_update(user_before, user_after):
+        if user_before == bot.user and user_before.avatar != user_after.avatar:
+            avatar = await bot.user.avatar_url_as(format='png').read()
+            avatar = BytesIO(avatar)
+            bot.color = update_bot_color(avatar)
+
+    # do some stuff when bot is ready
+    @bot.event
+    async def on_ready():
+        await bot.change_presence(activity=discord.Game(f'Type @{bot.user.name} help'))
+        logger.info('Logged in as: %s, (id: %s)' % (bot.user.name, bot.user.id))
 
     # start bot
     logger.info('Starting bot')
@@ -184,4 +208,3 @@ if __name__ == '__main__':
 # TODO help command (based on commands.MinimalHelpCommand)
 # TODO what to do on bot crash
 # TODO what to do on machine restart (auto-run)
-# TODO builtin alternative to requests to fetch bot image?

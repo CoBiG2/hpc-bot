@@ -26,8 +26,8 @@ A repository to host code to build a discord bot
     or define a config file and pass its path as `-c` argument to load it (`TOKEN` can be defined in the config file)
     
     ```shell script
-    usage: hpc_bot.py [-h] [-t TOKEN] [-c CONFIG] [-n NAME] [-i IMAGE] [-tc BOT_TEXT_CHANNEL] [-l LOG]
-    
+    usage: hpc_bot.py [-h] [-t TOKEN] [-c CONFIG] [-n NAME] [-a AVATAR] [-tc BOT_TEXT_CHANNEL] [-l LOG]
+
     Run hpc-bot discord Bot
     
     optional arguments:
@@ -35,7 +35,7 @@ A repository to host code to build a discord bot
       -t TOKEN              Bot token. REQUIRED. Get one here: https://discordapp.com/developers/applications/me
       -c CONFIG             Config file location
       -n NAME               Bot name. Default is computer host name (in this case: 'Beatrice')
-      -i IMAGE              Bot image location. Default is "./hpc_bot/img/img.png"
+      -a AVATAR             Bot avatar image location (only .jpeg or .png). Sets bot avatar. Ignoring this argument will leave your bot's avatar unchanged
       -tc BOT_TEXT_CHANNEL  Text channel where bot will send its messages. Default is "hpc-bots"
       -l LOG                Log file location. If file exists, logs will be appended to it. Default is "./bot.log"
     ```
@@ -45,7 +45,7 @@ A repository to host code to build a discord bot
    {
       "token": "<BOT-TOKEN> (see https://discordapp.com/developers/applications/me')",
       "name": "<SERVER-NAME>",
-      "image": "<BOT-IMAGE-PATH>",
+      "avatar": "<BOT-AVATAR-IMAGE-PATH>",
       "bot_text_channel": "<BOT-TEXT-CHANNEL>",
       "log": "<LOG-FILE-PATH>"
     }
