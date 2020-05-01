@@ -1,7 +1,0 @@
-{
-  "token": "<BOT-TOKEN> (see https://discordapp.com/developers/applications/me')",
-  "name": "<SERVER-NAME>",
-  "image": "<BOT-IMAGE-PATH>",
-  "bot_text_channel": "<BOT-TEXT-CHANNEL>",
-  "log": "D:\\Documents\\GitHub\\hpc-bot\\hpc_bot\\config"
-}

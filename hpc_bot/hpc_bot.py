@@ -71,14 +71,14 @@ def arguments_handler():
     Handles argument parsing
     """
     cli = argparse.ArgumentParser(description='Run hpc-bot discord Bot')
-    cli.add_argument('-c',
-                     dest='config',
-                     help='Config file location',
-                     default='')
     cli.add_argument('-t',
                      dest='token',
                      help='Bot token. REQUIRED. Get one here: \
                            https://discordapp.com/developers/applications/me',
+                     default='')
+    cli.add_argument('-c',
+                     dest='config',
+                     help='Config file location',
                      default='')
     cli.add_argument('-n',
                      dest='name',
