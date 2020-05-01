@@ -81,8 +81,8 @@ def arguments_handler():
                      default='')
     cli.add_argument('-n',
                      dest='name',
-                     help="Bot name. Default is computer host name (in this case: "
-                          f"'{socket.gethostname()}')",
+                     help='Bot name. Default is computer host name (in this case: '
+                          f'"{socket.gethostname()}")',
                      default=socket.gethostname())
     cli.add_argument('-a',
                      dest='avatar',
