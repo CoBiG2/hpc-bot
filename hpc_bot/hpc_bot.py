@@ -75,7 +75,8 @@ def arguments_handler():
 
 def main():
     """
-    Main bot function. Just ported from imperative code
+    Main bot function
+    Handles logging and bot initialization
     """
     # command line interface stuff
     cli = arguments_handler()
@@ -92,6 +93,7 @@ def main():
     bot.add_cog(cogs.Commands(bot))
     bot.help_command = commands.MinimalHelpCommand()
     bot.server_name = socket.gethostname()
+    bot.bot_text_channel = cli.bot_text_channel
 
     # bot server color
     image_request = requests.get(f'https://raw.githubusercontent.com/CoBiG2/hpc-bot/{bot.server_name}/img.png')
@@ -110,21 +112,19 @@ def main():
 
         # check how many servers this bot is connected to (should only be one)
         if len(bot.guilds) > 1:
-            logger.error('Bot can only be active on a single server')
+            logger.error('Bot can only be active on a single discord server')
             await bot.logout()
 
         # check if bot-specific text channel exists
-        else:
-            bot.bot_text_channel = ''
+        elif len(bot.guilds) == 1:
             for text_channel in bot.guilds[0].text_channels:
-                if text_channel.name == cli.bot_text_channel:
-                    bot.bot_text_channel = text_channel
+                if text_channel.name == bot.bot_text_channel:
+                    bot.bot_text_channel = text_channel  # TextChannel object
                     break
-            if not bot.bot_text_channel:
-                logger.error(f'No text channel named "{cli.bot_text_channel}" exists on the server')
-                await bot.logout()
-            else:
-                logger.info('Bot is ready')
+            if isinstance(bot.bot_text_channel, str):
+                logger.warning(f'No text channel named "{bot.bot_text_channel}" exists on the server.'
+                               f'No messages will be sent by the bot until this channel exists')
+        logger.info('Bot is ready')
 
     # start bot
     logger.info('Starting bot')
