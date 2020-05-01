@@ -40,23 +40,30 @@ except ImportError:
     import hpc_bot.cogs as cogs
 
 
-def config_parser(cli):
+def config_parser(cli, cli_parsed):
     """
     Parses the config file and modifies options accordingly
+
+    cli holds all the arguments metadata
+    cli_parsed holds the parsed arguments
     """
-    with open(os.path.abspath(cli.config)) as config_data:
+    with open(os.path.abspath(cli_parsed.config)) as config_data:
         configs = json.load(config_data)
 
-    if cli.token is None:
-        cli.token = configs['token']
-    if cli.log_file is None:
-        cli.log_file = os.path.abspath(os.path.expanduser(configs['log']))
-    if os.path.isdir(os.path.dirname(cli.log_file)) is False:
-        os.makedirs(os.path.dirname(cli.log_file))
-    if cli.bot_text_channel is None:
-        cli.bot_text_channel = configs['bot_text_channel']
+    if 'token' in configs and cli_parsed.token == cli.get_default('token'):
+        cli_parsed.token = configs['token']
+    if 'name' in configs and cli_parsed.name == cli.get_default('name'):
+        cli_parsed.name = configs['name']
+    if 'image' in configs and cli_parsed.image == cli.get_default('image'):
+        cli_parsed.image = configs['image']
+    if 'bot_text_channel' in configs and cli_parsed.bot_text_channel == cli.get_default('bot_text_channel'):
+        cli_parsed.bot_text_channel = configs['bot_text_channel']
+    if 'log' in configs and cli_parsed.log == cli.get_default('log'):
+        cli_parsed.log = os.path.abspath(os.path.expanduser(configs['log']))
+        if os.path.exists(cli_parsed.log) and os.path.isdir(cli_parsed.log):  # logging handles files directly
+            cli_parsed.log = os.path.join(cli_parsed.log, 'bot.log')  # append file to log path
 
-    return cli
+    return cli_parsed
 
 
 def arguments_handler():
@@ -64,28 +71,43 @@ def arguments_handler():
     Handles argument parsing
     """
     cli = argparse.ArgumentParser(description='Run hpc-bot discord Bot')
-    cli.add_argument('-t',
-                     dest='token',
-                     help='Bot token. Get one here: \
-                           https://discordapp.com/developers/applications/me')
     cli.add_argument('-c',
                      dest='config',
                      help='Config file location',
-                     default=None)
-    cli.add_argument('-l',
-                     dest='log_file',
-                     help='Log file location. Default is "./bot.log"',
-                     default='bot.log')
+                     default='')
+    cli.add_argument('-t',
+                     dest='token',
+                     help='Bot token. REQUIRED. Get one here: \
+                           https://discordapp.com/developers/applications/me',
+                     default='')
+    cli.add_argument('-n',
+                     dest='name',
+                     help="Bot name. Default is computer host name (in this case: "
+                          f"'{socket.gethostname()}')",
+                     default=socket.gethostname())
+    cli.add_argument('-i',
+                     dest='image',
+                     help='Bot image location. Default is "./hpc_bot/img/img.png"',
+                     default='hpc_bot/img/img.png')
     cli.add_argument('-tc',
                      dest='bot_text_channel',
-                     help='Text channel to join in discord',
+                     help='Text channel where bot will send its messages. Default is "hpc-bots"',
                      default='hpc-bots')
-    cli = cli.parse_args()
+    cli.add_argument('-l',
+                     dest='log',
+                     help='Log file location. If file exists, logs will be appended to it. '
+                          'Default is "./bot.log"',
+                     default='bot.log')
+    cli_parsed = cli.parse_args()
 
-    if cli.config is not None:
-        cli = config_parser(cli)
+    if cli_parsed.config != '':
+        cli_parsed = config_parser(cli, cli_parsed)
 
-    return cli
+    # token is required
+    if not cli_parsed.token:
+        cli.error('Bot token is required for bot to run')
+
+    return cli_parsed
 
 
 def main():
@@ -99,7 +121,7 @@ def main():
     # logging stuff
     logging.basicConfig(level=logging.INFO)
     logger = logging.getLogger('discord')
-    handler = logging.FileHandler(filename=cli.log_file, encoding='utf-8', mode='a')
+    handler = logging.FileHandler(filename=cli.log, encoding='utf-8', mode='a')
     handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
     logger.addHandler(handler)
 
@@ -107,15 +129,16 @@ def main():
     bot = commands.Bot(command_prefix=commands.when_mentioned)  # bot only reacts when mentioned: @<bot_name> <command>
     bot.add_cog(cogs.Commands(bot))
     bot.help_command = commands.MinimalHelpCommand()
-    bot.server_name = socket.gethostname()
+    bot.server_name = cli.name
     bot.bot_text_channel = cli.bot_text_channel
 
     # bot server color
+    # # TODO use only local image
     image_request = requests.get(f'https://raw.githubusercontent.com/CoBiG2/hpc-bot/{bot.server_name}/img.png')
     if image_request.status_code == 200:
         server_image = Image.open(BytesIO(image_request.content))
     else:  # default image if request from github fails
-        server_image = Image.open('hpc_bot/img/img.png')
+        server_image = Image.open(cli.image)
     image_color = server_image.resize((1, 1)).getpixel((0, 0))[:-1]  # average pixel color
     bot.color = discord.Color.from_rgb(*image_color)
 
