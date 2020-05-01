@@ -1,9 +1,0 @@
-[Unit]
-Description=HPC-bot for Discord
-
-[Service]
-Type=simple
-ExecStart=/bin/bash -a -c 'source ~/.bashrc && exec ~/.local/bin/hpc-bot -c ~/.local/etc/hpc_bot/hpc_botrc.json'
-
-[Install]
-WantedBy=default.target
