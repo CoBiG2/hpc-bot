@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# coding: utf-8
 
 # Copyright 2020 Francisco Pina Martins <f.pinamartins@gmail.com>
 # This file is part of hpc-bot.
