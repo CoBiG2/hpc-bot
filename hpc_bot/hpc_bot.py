@@ -126,6 +126,14 @@ def main():
                                f'No messages will be sent by the bot until this channel exists')
         logger.info('Bot is ready')
 
+    @bot.event
+    async def on_guild_join(guild):
+        # check how many servers this bot is connected to (should only be one)
+        if len(bot.guilds) > 1:
+            logger.error('Bot cannot join additional discord servers')
+            logger.warning(f'Leaving guild {guild.name}...')
+            await guild.leave()
+
     # start bot
     logger.info('Starting bot')
     bot.run(cli.token)
