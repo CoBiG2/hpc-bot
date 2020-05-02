@@ -28,7 +28,7 @@ __author__ = 'Pedro HC David, https://github.com/Kronopt'
 __credits__ = ['Pedro HC David', 'Francisco Pina Martins']
 __copyright__ = 'Copyright Pedro HC David & Francisco Pina Martins 2020'
 __license__ = 'GPLv3'
-__version__ = '0.1.0a'
+__version__ = '0.1.0a1'
 __url__ = 'https://github.com/CoBiG2/hpc-bot'
 __description__ = 'A discord bot to relay HPC information.'
 
@@ -127,7 +127,8 @@ def update_bot_color(image):
     image is a filename (string), pathlib.Path object or a file object
     """
     image_read = Image.open(image)
-    image_color = image_read.resize((1, 1)).getpixel((0, 0))[:-1]  # average pixel color
+    image_color = image_read.resize((1, 1)).getpixel((0, 0))  # average pixel color
+    image_color = image_color[:-1] if len(image_color) > 3 else image_color  # may contain alpha value
     return discord.Color.from_rgb(*image_color)
 
 
@@ -161,29 +162,6 @@ def main():
             logger.error('Bot can only be active on a single discord server')
             await bot.logout()
 
-        # check if bot-specific text channel exists
-        elif len(bot.guilds) == 1:
-            for text_channel in bot.guilds[0].text_channels:
-                if text_channel.name == bot.bot_text_channel:
-                    bot.bot_text_channel = text_channel  # TextChannel object
-                    break
-            if isinstance(bot.bot_text_channel, str):
-                logger.warning(f'No text channel named "{bot.bot_text_channel}" exists on the server.'
-                               f'No messages will be sent by the bot until this channel exists')
-        logger.info('Bot is ready')
-
-        if cli.avatar:
-            # set bot avatar if image path was defined
-            with open(cli.avatar, 'rb') as avatar_image:
-                await bot.user.edit(avatar_image.read())
-        else:
-            # fetch avatar image if there is no local image
-            cli.avatar = await bot.user.avatar_url_as(format='png').read()
-            cli.avatar = BytesIO(cli.avatar)
-
-        # bot server color (based on avatar color)
-        bot.color = update_bot_color(cli.avatar)
-
     # when bot joins a new discord server checks how many it is connected to (it shouldn't be on more than one)
     @bot.event
     async def on_guild_join(guild):
@@ -204,12 +182,37 @@ def main():
     @bot.event
     async def on_ready():
         await bot.change_presence(activity=discord.Game(f'Type @{bot.user.name} help'))
-        logger.info('Logged in as: %s, (id: %s)' % (bot.user.name, bot.user.id))
+
+        # check if bot-specific text channel exists
+        if len(bot.guilds) == 1:
+            for text_channel in bot.guilds[0].text_channels:
+                if text_channel.name == bot.bot_text_channel:
+                    bot.bot_text_channel = text_channel  # TextChannel object
+                    break
+            if isinstance(bot.bot_text_channel, str):
+                logger.warning(f'No text channel named "{bot.bot_text_channel}" exists on the server. '
+                               f'No messages will be sent by the bot until this channel exists')
+
+        # bot avatar
+        if cli.avatar:
+            # set bot avatar if image path was defined
+            with open(cli.avatar, 'rb') as avatar_image:
+                await bot.user.edit(avatar_image.read())
+        else:
+            # fetch avatar image if there is no local image
+            cli.avatar = await bot.user.avatar_url_as(format='png').read()
+            cli.avatar = BytesIO(cli.avatar)
+
+        # bot server color (based on avatar color)
+        bot.color = update_bot_color(cli.avatar)
+
+        logger.info(f'Logged in as: {bot.user.name}, (id: {bot.user.id})')
+        logger.info('Bot is ready')
 
     # start bot
     logger.info('Starting bot')
     bot.run(cli.token)
-    logger.info('bot shutdown complete')
+    logger.info('Shutting down bot complete')
 
 
 if __name__ == '__main__':
