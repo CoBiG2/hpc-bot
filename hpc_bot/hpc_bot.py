@@ -38,6 +38,7 @@ import json
 import logging
 import os
 import socket
+import types
 import discord
 from io import BytesIO
 from discord.ext import commands
@@ -132,6 +133,22 @@ def update_bot_color(image):
     return discord.Color.from_rgb(*image_color)
 
 
+def retrieve_bot_text_channel(guild, bot_text_channel_name):
+    """
+    Finds a text channel with the defined bot text channel name
+    """
+    for text_channel in guild.text_channels:
+        if text_channel.name == bot_text_channel_name:
+            return text_channel
+
+
+async def change_bot_presence(bot, guild):
+    """
+    Changes bot "presence" message
+    """
+    await bot.change_presence(activity=discord.Game(f'Type @{guild.me.nick} help'))
+
+
 def main():
     """
     Main bot function
@@ -151,47 +168,102 @@ def main():
     bot = commands.Bot(command_prefix=commands.when_mentioned)  # bot only reacts when mentioned: @<bot_name> <command>
     bot.add_cog(cogs.Commands(bot))
     bot.help_command = commands.MinimalHelpCommand()
-    bot.server_name = cli.name
-    bot.bot_text_channel = cli.bot_text_channel
 
-    # do some stuff when bot connects to discord (but is not ready yet)
-    @bot.event
-    async def on_connect():
-        # check how many servers this bot is connected to (should only be one)
-        if len(bot.guilds) > 1:
-            logger.error('Bot can only be active on a single discord server')
-            await bot.logout()
+    def bot_guild(self):
+        """
+        return this bot discord server
+        None if bot is still on no discord servers or on more than one
+        """
+        return self.guilds[0] if len(self.guilds) == 1 else None
+    bot.bot_guild = types.MethodType(bot_guild, bot)
 
-    # when bot joins a new discord server checks how many it is connected to (it shouldn't be on more than one)
-    @bot.event
-    async def on_guild_join(guild):
-        if len(bot.guilds) > 1:
-            logger.error('Bot cannot join additional discord servers')
-            logger.warning(f'Leaving guild {guild.name}...')
-            await guild.leave()
+    def bot_name(self, ctx):
+        """
+        return bot nickname if on text channel, bot name if private channel
+        """
+        guild = ctx.guild
+        return guild.me.nick if guild is not None else self.user.name
+    bot.bot_name = types.MethodType(bot_name, bot)
 
-    # updates bot color on bot avatar change
+    #
+    # events
+    #
+
     @bot.event
     async def on_user_update(user_before, user_after):
+        # updates bot color on bot avatar change
         if user_before == bot.user and user_before.avatar != user_after.avatar:
             avatar = await bot.user.avatar_url_as(format='png').read()
             avatar = BytesIO(avatar)
             bot.color = update_bot_color(avatar)
 
-    # do some stuff when bot is ready
+    @bot.event
+    async def on_guild_join(guild):
+        # leave additional discord servers (1 max)
+        if len(bot.guilds) > 1:
+            logger.error('Bot cannot join additional discord servers')
+            logger.warning(f'Leaving guild {guild.name}...')
+            await guild.leave()
+
+        else:
+            # set nickname when joining guild
+            logger.info(f'Joining guild {guild.name}')
+            logger.info(f'Setting nickname to {cli.name}')
+            await guild.me.edit(nick=cli.name, reason='Setting up bot nickname')
+
+            # presence 'Type help'
+            await change_bot_presence(bot, guild)
+
+    @bot.event
+    async def on_guild_channel_delete(channel):
+        # if bot text channel is deleted
+        if channel == bot.bot_text_channel:
+            logger.warning(f'Bot text channel "{bot.bot_text_channel}" '
+                           f'(id: {bot.bot_text_channel.id}) was deleted.')
+
+            # check if there is another text channel with the defined bot text channel name
+            bot.bot_text_channel = retrieve_bot_text_channel(channel.guild, cli.bot_text_channel)
+
+            # there is
+            if bot.bot_text_channel:
+                logger.info('Found another text channel that matches bot text channel definition: '
+                            f'"{bot.bot_text_channel}" (id: {bot.bot_text_channel.id})')
+            # there isn't
+            else:
+                logger.warning(f'No messages will be sent by the bot until this channel exists again')
+
+    @bot.event
+    async def on_guild_channel_create(channel):
+        # if bot text channel doesn't exist yet
+        if not bot.bot_text_channel \
+                and isinstance(channel, discord.TextChannel) \
+                and channel.name == cli.bot_text_channel:
+            logger.info(f'Newly created text channel matches bot text channel definition.')
+            bot.bot_text_channel = channel
+
     @bot.event
     async def on_ready():
-        await bot.change_presence(activity=discord.Game(f'Type @{bot.user.name} help'))
+        # check how many discord servers this bot is connected to (1 max)
+        if len(bot.guilds) > 1:
+            logger.error('Bot can only be active on a single discord server')
+            await bot.logout()
 
-        # check if bot-specific text channel exists
-        if len(bot.guilds) == 1:
-            for text_channel in bot.guilds[0].text_channels:
-                if text_channel.name == bot.bot_text_channel:
-                    bot.bot_text_channel = text_channel  # TextChannel object
-                    break
-            if isinstance(bot.bot_text_channel, str):
-                logger.warning(f'No text channel named "{bot.bot_text_channel}" exists on the server. '
-                               f'No messages will be sent by the bot until this channel exists')
+        elif len(bot.guilds) == 1:
+            guild = bot.bot_guild()
+
+            # set nickname
+            if guild.me.nick != cli.name:
+                logger.info(f'Setting nickname from "{guild.me.nick}" to "{cli.name}"')
+                await guild.me.edit(nick=cli.name, reason='Setting up bot nickname')
+
+            # check if bot-specific text channel exists
+            bot.bot_text_channel = retrieve_bot_text_channel(guild, cli.bot_text_channel)
+            if not bot.bot_text_channel:
+                logger.warning(f'No text channel named "{cli.bot_text_channel}" exists on the "{guild}" '
+                               f'discord server. No messages will be sent by the bot until this channel exists')
+
+            # presence 'Type help'
+            await change_bot_presence(bot, guild)
 
         # bot avatar
         if cli.avatar:
@@ -199,11 +271,11 @@ def main():
             with open(cli.avatar, 'rb') as avatar_image:
                 await bot.user.edit(avatar_image.read())
         else:
-            # fetch avatar image if there is no local image
+            # fetch avatar image if no local image was defined
             cli.avatar = await bot.user.avatar_url_as(format='png').read()
             cli.avatar = BytesIO(cli.avatar)
 
-        # bot server color (based on avatar color)
+        # bot color (based on avatar color)
         bot.color = update_bot_color(cli.avatar)
 
         logger.info(f'Logged in as: {bot.user.name}, (id: {bot.user.id})')

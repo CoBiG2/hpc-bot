@@ -54,14 +54,6 @@ class Commands(commands.Cog):
             self.logger.error(error)
 
     @commands.command()
-    async def servers(self, ctx):
-        """
-        Server(s) name(s)
-        Name of the server(s) where the bot is running
-        """
-        await ctx.send(self.bot.server_name)
-
-    @commands.command()
     @commands.max_concurrency(1)
     @commands.check(checks.can_write_to_bot_text_channel())
     async def status(self, ctx):
@@ -128,7 +120,7 @@ class Commands(commands.Cog):
 
         # because only one instance of this command can run at a time, saving these attributes
         # and editing them is ok, because there's no risk of them being accessed from another place
-        self.home_embed = self.new_home_embed("home")
+        self.home_embed = self.new_home_embed(ctx, "home")
         self.home_message_sent = await self.bot.bot_text_channel.send(embed=self.home_embed)
 
         await self.run_shell_cmd(ctx, command, self.handle_home)
@@ -155,16 +147,17 @@ class Commands(commands.Cog):
         await self.home_message_sent.edit(embed=self.home_embed.add_field(
             name=user, value=usage, inline=True))
 
-    def new_home_embed(self, command_name):
+    def new_home_embed(self, ctx, command_name):
         """Generates a new default embed for the home command"""
+        bot_name = self.bot.bot_name(ctx)
         return discord.Embed(
             title="size of all __home__ folders:",
             color=self.bot.color,
         ).set_footer(
             text=f'{command_name} 🏠'
         ).set_author(
-            name=self.bot.server_name,
-            icon_url=f"https://github.com/CoBiG2/hpc-bot/raw/{self.bot.server_name}/img.png"  # TODO config this
+            name=bot_name,
+            icon_url=f"https://raw.githubusercontent.com/CoBiG2/hpc-bot/extras/img/{bot_name.lower()}.png"
         )
 
     async def run_shell_cmd(self, ctx, cmd, handle_output_line):
@@ -194,7 +187,7 @@ class Commands(commands.Cog):
             # no error while running the command
             if process.returncode == 0:
                 await ctx.send(f'Command `{ctx.command.name}` '
-                               f'finished running successfully on `{self.bot.server_name}`')
+                               f'finished running successfully on `{self.bot.bot_name(ctx)}`')
 
             # errors
             else:
@@ -206,13 +199,13 @@ class Commands(commands.Cog):
                     await ctx.send(f"Error: command `{ctx.command.name}` "
                                    f"terminated by signal `{signal_code}` "
                                    f"({signal.Signals(signal_code).name}) `"
-                                   f"on `{self.bot.server_name}`")
+                                   f"on `{self.bot.bot_name(ctx)}`")
 
                 # error return code
                 else:
                     await ctx.send(f"Error: command `{ctx.command.name}` "
                                    f"terminated with error code `{process.returncode}` "
-                                   f"on `{self.bot.server_name}`")
+                                   f"on `{self.bot.bot_name(ctx)}`")
                     # TODO find a way to get return code name with python...
 
                 self.logger.error(stderr.decode('utf-8').rstrip())

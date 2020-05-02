@@ -23,30 +23,38 @@ Command checks
 import discord
 
 
+async def no_channel_info_message(ctx, channel):
+    await ctx.send(f"Error: Channel `{channel.name}` doesn't exist. Please create it.")
+
+
 def can_write_to_bot_text_channel():
     """
     Similar to discord.ext.commands.bot_has_permissions
     Checks if channel exists and if bot has write permissions
     """
     async def predicate(ctx):
-        channel_name = ctx.bot.bot_text_channel  # discord.TextChannel or str (if didn't exist when bot initialized)
+        channel = ctx.bot.bot_text_channel  # discord.TextChannel or None
         guild = ctx.guild
         me = guild.me if guild is not None else ctx.bot.user
 
-        if isinstance(channel_name, discord.TextChannel):
-            channel_name = channel_name.name
-
-        channel = discord.utils.get(guild.text_channels, name=channel_name)  # does channel exist
-        if channel is None:
-            await ctx.send(f"Error: Channel `{channel_name}` doesn't exist. Please create it.")
+        # Bot doesn't recognize the bot text channel (deleted or didn't ever exist)
+        if not channel:
+            await no_channel_info_message(ctx, channel)
             return False
-        ctx.bot.bot_text_channel = channel  # set channel on bot (if it wasn't already set)
+
+        # if, for some reason, the bot couldn't find out for himself that the bot channel
+        # doesn't exist or was deleted, this is a redundant check
+        channel_found = discord.utils.get(guild.text_channels, name=channel.name)  # does channel exist
+        if not channel_found:
+            await no_channel_info_message(ctx, channel)
+            return False
 
         permissions = channel.permissions_for(me)
         permission = getattr(permissions, 'send_messages')
         if not permission:
             await ctx.send(f"Error: Can't send messages to channel `{channel.name}`. Check bot permissions.")
             return False
+
         return True
 
     return predicate
