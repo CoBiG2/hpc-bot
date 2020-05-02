@@ -60,4 +60,3 @@ venv.bak/
 
 # hpc-bot
 *.log
-config*
