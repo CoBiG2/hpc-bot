@@ -22,8 +22,8 @@ A repository to host code to build a discord bot
     ```
 3. Run
 
-    Pass command line arguments as needed, `TOKEN` being the only one required (all others have defaults), 
-    or define a config file and pass its path as `-c` argument to load it (`TOKEN` can be defined in the config file)
+    Pass command line arguments as needed, `TOKEN` being the only one required (all others have defaults).
+    Alternatively, define a config file inside the `config` folder and use the `--config` argument to load it (`TOKEN` can be defined in the config file as well)
     
     ```
     usage: hpc_bot.py [-h] [-t TOKEN] [-n NAME] [-a AVATAR] [-tc BOT_TEXT_CHANNEL] [-l LOG] [--config]
