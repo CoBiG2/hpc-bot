@@ -21,6 +21,7 @@ hpc-bot setup
 """
 
 import sys
+from hpc_bot import hpc_bot
 try:
     from setuptools import setup
 except ImportError:
@@ -33,8 +34,8 @@ class NotSupportedException(BaseException):
     pass
 
 
-if float("{}.{}".format(sys.version_info.major, sys.version_info.minor)) < 3.8:
-    raise NotSupportedException("Only Python 3.8 or higher is supported")
+if float(f'{sys.version_info.major}.{sys.version_info.minor}') < 3.8:
+    raise NotSupportedException('Only Python 3.8 or higher is supported')
 
 
 def dynamic_datafiles():
@@ -43,43 +44,48 @@ def dynamic_datafiles():
     required.
     """
 
-    config_file = ("etc/hpc_bot", ["/config/config"])
+    config_file = ('etc/hpc_bot', ['/config/config'])
     data_files = [config_file]
 
-    if sys.platform == "linux":
-        service_file = "hpc_bot/systemd/hpc-bot.service"
-        data_files.append(("share/systemd/user", [service_file]))
+    if sys.platform == 'linux':
+        service_file = 'hpc_bot/systemd/hpc-bot.service'
+        data_files.append(('share/systemd/user', [service_file]))
 
     return data_files
 
 
-# Set some variables (PKGBUILD inspired)
-VERSION = "0.2.0"
-URL = "https://github.com/CoBiG2/hpc-bot"
-
+with open('README.md', encoding='utf-8') as readme_md,\
+        open('requirements.txt', encoding='utf-8') as requirements_txt:
+    readme = readme_md.read()
+    requirements = [req[:req.find('#')].rstrip() for req in requirements_txt.readlines()]
 
 setup(
-    name="hpc-bot",
-    version=VERSION,
-    packages=["hpc_bot",
-              "hpc_bot.cogs",
-              "hpc_bot.checks"],
-    install_requires=["discord.py==1.3.*"],
-    description="A discord bot to relay CoBiG2 HPC information.",
-    url=URL,
-    download_url="{0}/-/archive/{1}/hpc_bot-{1}.tar.gz".format(URL, VERSION),
-    author="Kronopt",
-    license="GPL3",
-    classifiers=["Intended Audience :: Science/Research",
-                 "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
-                 "Natural Language :: English",
-                 "Operating System :: POSIX :: Linux",
-                 "Programming Language :: Python :: 3 :: Only",
-                 "Programming Language :: Python :: 3.8"],
+    name='hpc-bot',
+    version=hpc_bot.__version__,
+    description=hpc_bot.__description__,
+    long_description=readme,
+    long_description_content_type='text/markdown',
+    license=hpc_bot.__license__,
+    author=hpc_bot.__author__,
+    url=hpc_bot.__url__,
+    # project_urls={'Documentation': '<documentation_url>'},
+    packages=['hpc_bot',
+              'hpc_bot.cogs',
+              'hpc_bot.checks'],
+    install_requires=requirements,
+    keywords='discord-bot discord-py hpc-bot',
+    download_url='{0}/-/archive/{1}/hpc_bot-{1}.tar.gz'.format(hpc_bot.__url__, hpc_bot.__version__),
+    classifiers=['Development Status :: 3 - Alpha',
+                 'Intended Audience :: Science/Research',
+                 'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
+                 'Natural Language :: English',
+                 'Operating System :: POSIX :: Linux',
+                 'Programming Language :: Python :: 3 :: Only',
+                 'Programming Language :: Python :: 3.8'],
     data_files=dynamic_datafiles(),
     entry_points={
-        "console_scripts": [
-            "hpc-bot = hpc_bot.hpc_bot:main",
+        'console_scripts': [
+            'hpc-bot = hpc_bot.hpc_bot:main',
         ]
     },
 )
