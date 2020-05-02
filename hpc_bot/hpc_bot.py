@@ -46,7 +46,7 @@ def config_parser(cli, cli_parsed):
     cli holds all the arguments metadata
     cli_parsed holds the parsed arguments
     """
-    with open(os.path.abspath(cli_parsed.config)) as config_data:
+    with open(os.path.abspath("hpc_bot/config/config")) as config_data:
         configs = json.load(config_data)
 
     if 'token' in configs and cli_parsed.token == cli.get_default('token'):
@@ -75,10 +75,6 @@ def arguments_handler():
                      help='Bot token. REQUIRED. Get one here: \
                            https://discordapp.com/developers/applications/me',
                      default='')
-    cli.add_argument('-c',
-                     dest='config',
-                     help='Config file location',
-                     default='')
     cli.add_argument('-n',
                      dest='name',
                      help='Bot name. Default is computer host name (in this case: '
@@ -98,9 +94,13 @@ def arguments_handler():
                      help='Log file location. If file exists, logs will be appended to it. '
                           'Default is "./bot.log"',
                      default='bot.log')
+    cli.add_argument('--config',
+                     dest='config',
+                     help='Use config file (located at hpc_bot/config/)',
+                     action='store_true')
     cli_parsed = cli.parse_args()
 
-    if cli_parsed.config != '':
+    if cli_parsed.config:
         cli_parsed = config_parser(cli, cli_parsed)
 
     # token is required
@@ -204,7 +204,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
-# TODO help command (based on commands.MinimalHelpCommand)
-# TODO what to do on bot crash
-# TODO what to do on machine restart (auto-run)

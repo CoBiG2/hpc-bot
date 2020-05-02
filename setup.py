@@ -43,7 +43,7 @@ def dynamic_datafiles():
     required.
     """
 
-    config_file = ("etc/hpc_bot", ["hpc_bot/config.json"])
+    config_file = ("etc/hpc_bot", ["/config/config"])
     data_files = [config_file]
 
     if sys.platform == "linux":
