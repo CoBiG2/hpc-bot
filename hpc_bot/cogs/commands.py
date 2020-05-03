@@ -23,6 +23,7 @@ Commands Cog - bot commands
 import asyncio
 import logging
 import signal
+import traceback
 import discord
 from functools import partial
 from discord.ext import commands
@@ -35,23 +36,40 @@ except ImportError:
 
 class Commands(commands.Cog):
 
-    def __init__(self, bot):
+    def __init__(self, bot, logfile):
         super().__init__()
         self.bot = bot
+
         self.logger = logging.getLogger(__name__)
-        self.home_embed = None
-        self.home_message_sent = None
+        handler = logging.FileHandler(filename=logfile, encoding='utf-8', mode='a')
+        handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
+        self.logger.addHandler(handler)
 
     async def cog_before_invoke(self, ctx):
         """Called before each command invocation"""
-        user = ctx.author.nick if isinstance(ctx.author, discord.Member) else ctx.author.name
-        self.logger.info("calling command: {}, by user: {}, from channel: {}".format(
-            ctx.command.name, user, ctx.channel))
+        user = ctx.author
+        self.logger.info(f'Calling command: {ctx.command}, '
+                         f'by user: {user}, nickname: {user.display_name}, '
+                         f'from channel: {ctx.channel}')
 
     async def cog_command_error(self, ctx, error):
         """Called when an error is raised inside this cog"""
         if not isinstance(error, commands.MaxConcurrencyReached):
-            self.logger.error(error)
+            self.logger.error(f'Error calling command {ctx.command.name}:\n{traceback.format_exc()}')
+
+    @commands.command()
+    @commands.check(checks.can_write_to_bot_text_channel())
+    async def test(self, ctx):
+        bot_color = await self.bot.get_color()
+        embed = discord.Embed(
+            title="test embed",
+            color=bot_color
+        ).set_footer(
+            text=f'command name: {"test"} 🔧'
+        ).set_author(
+            name=self.bot.bot_name(ctx),
+            icon_url=f"https://raw.githubusercontent.com/CoBiG2/hpc-bot/extras/img/loki.png")
+        await self.bot.send_message(ctx, f'test message from bot "{self.bot.bot_name(ctx)}"', embed=embed)
 
     @commands.command()
     @commands.max_concurrency(1)
@@ -84,22 +102,24 @@ class Commands(commands.Cog):
         if cmd_output == 'cpu_and_time':
             uptime = line[line.find('up ')+3:line.find('user')].rsplit(',', maxsplit=1)[0]
             cpu_usage = line[line.rfind('load average: ')+14:]  # 1, 5 and 15 minutes average
-            await self.bot.bot_text_channel.send(f'uptime: {uptime}\ncpu usage: {cpu_usage}')
+            await self.bot.send_message(ctx, f'uptime: {uptime}\ncpu usage: {cpu_usage}')
 
         elif cmd_output == 'ram_and_swap':
             line_contents = line.split()
             # ignores first line, which only contains column headers
             if line_contents[0] == 'Mem:':
                 _, ram_total, ram_used, ram_free, _, _, ram_available = line_contents
-                await self.bot.bot_text_channel.send(
+                await self.bot.send_message(
+                    ctx,
                     f'ram:\ntotal {ram_total}\nused {ram_used}\nfree {ram_free}\navailable {ram_available}')
             elif line_contents[0] == 'Swap:':
                 _, swap_total, swap_used, swap_free = line_contents
-                await self.bot.bot_text_channel.send(f'swap:\ntotal {swap_total}\nused {swap_used}\nfree {swap_free}')
+                await self.bot.send_message(ctx, f'swap:\ntotal {swap_total}\nused {swap_used}\nfree {swap_free}')
 
         elif cmd_output == 'disk_usage':
             _, disk_size, disk_used, disk_available, disk_use_percentage, _ = line.split()
-            await self.bot.bot_text_channel.send(
+            await self.bot.send_message(
+                ctx,
                 f'disk:\nsize {disk_size}\nused {disk_used}\navailable {disk_available}\n'
                 f'used percentage {disk_use_percentage}')
 
@@ -117,19 +137,12 @@ class Commands(commands.Cog):
         Total space occupied by each user's home folder on the server(s)
         """
         command = 'sudo du -sh /home/*'
+        home_embed = await self.new_home_embed(ctx, "home")
+        home_message_sent = await self.bot.send_message(ctx, embed=home_embed)
+        await self.run_shell_cmd(ctx, command, self.handle_home,
+                                 embed=home_embed, message_sent=home_message_sent)
 
-        # because only one instance of this command can run at a time, saving these attributes
-        # and editing them is ok, because there's no risk of them being accessed from another place
-        self.home_embed = self.new_home_embed(ctx, "home")
-        self.home_message_sent = await self.bot.bot_text_channel.send(embed=self.home_embed)
-
-        await self.run_shell_cmd(ctx, command, self.handle_home)
-
-        # reset variables
-        self.home_embed = None
-        self.home_message_sent = None
-
-    async def handle_home(self, ctx, line):
+    async def handle_home(self, ctx, line, **kwargs):
         """
         Handles home command output
 
@@ -144,15 +157,17 @@ class Commands(commands.Cog):
         usage = line_contents[0].rstrip()
         user = line_contents[-1]
 
-        await self.home_message_sent.edit(embed=self.home_embed.add_field(
-            name=user, value=usage, inline=True))
+        await kwargs.get('message_sent').edit(
+            embed=kwargs.get('embed').add_field(
+                name=user, value=usage, inline=True))
 
-    def new_home_embed(self, ctx, command_name):
+    async def new_home_embed(self, ctx, command_name):
         """Generates a new default embed for the home command"""
         bot_name = self.bot.bot_name(ctx)
+        bot_color = await self.bot.get_color()
         return discord.Embed(
             title="size of all __home__ folders:",
-            color=self.bot.color,
+            color=bot_color,
         ).set_footer(
             text=f'{command_name} 🏠'
         ).set_author(
@@ -160,7 +175,7 @@ class Commands(commands.Cog):
             icon_url=f"https://raw.githubusercontent.com/CoBiG2/hpc-bot/extras/img/{bot_name.lower()}.png"
         )
 
-    async def run_shell_cmd(self, ctx, cmd, handle_output_line):
+    async def run_shell_cmd(self, ctx, cmd, handle_output_line, **kwargs):
         """
         Runs shell command 'cmd' on the local machine
 
@@ -182,12 +197,11 @@ class Commands(commands.Cog):
                 line_read = await process.stdout.readline()
                 line = line_read.decode('utf-8').rstrip()
                 if line:
-                    await handle_output_line(ctx, line)
+                    await handle_output_line(ctx, line, **kwargs)
 
             # no error while running the command
             if process.returncode == 0:
-                await ctx.send(f'Command `{ctx.command.name}` '
-                               f'finished running successfully on `{self.bot.bot_name(ctx)}`')
+                await ctx.send(f'Command `{ctx.command.name}` finished running successfully')
 
             # errors
             else:
@@ -196,16 +210,19 @@ class Commands(commands.Cog):
                 # signal terminated
                 if process.returncode < 0:
                     signal_code = abs(process.returncode)
-                    await ctx.send(f"Error: command `{ctx.command.name}` "
-                                   f"terminated by signal `{signal_code}` "
-                                   f"({signal.Signals(signal_code).name}) `"
-                                   f"on `{self.bot.bot_name(ctx)}`")
+                    await ctx.send(f'Error: command `{ctx.command.name}` '
+                                   f'terminated by signal `{signal_code}` '
+                                   f'({signal.Signals(signal_code).name})')
 
                 # error return code
                 else:
-                    await ctx.send(f"Error: command `{ctx.command.name}` "
-                                   f"terminated with error code `{process.returncode}` "
-                                   f"on `{self.bot.bot_name(ctx)}`")
+                    await ctx.send(f'Error: command `{ctx.command.name}` '
+                                   f'terminated with error code `{process.returncode}`')
                     # TODO find a way to get return code name with python...
+
+                # delete message that was being updated, if any
+                message_sent = kwargs.get('message_sent')
+                if message_sent:
+                    await message_sent.delete()
 
                 self.logger.error(stderr.decode('utf-8').rstrip())

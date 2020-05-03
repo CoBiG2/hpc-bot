@@ -33,6 +33,10 @@ def can_write_to_bot_text_channel():
     Checks if channel exists and if bot has write permissions
     """
     async def predicate(ctx):
+        # if private channel, ok
+        if isinstance(ctx.channel, (discord.DMChannel, discord.GroupChannel)):
+            return True
+
         channel = ctx.bot.bot_text_channel  # discord.TextChannel or None
         guild = ctx.guild
         me = guild.me if guild is not None else ctx.bot.user
