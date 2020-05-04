@@ -307,7 +307,7 @@ def main():
             if cli.avatar:
                 # set bot avatar if image path was defined
                 with open(cli.avatar, 'rb') as avatar_image:
-                    await bot.user.edit(avatar_image.read())
+                    await bot.user.edit(avatar=avatar_image.read())
             else:
                 # fetch avatar image if no local image was defined
                 cli.avatar = await bot.user.avatar_url_as(format='png').read()
