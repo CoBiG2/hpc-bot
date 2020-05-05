@@ -62,14 +62,13 @@ class Commands(commands.Cog):
     async def test(self, ctx):
         bot_color = await self.bot.get_color()
         embed = discord.Embed(
-            title="test embed",
             color=bot_color
         ).set_footer(
-            text=f'command name: {"test"} 🔧'
+            text=f'🔧 {ctx.command.name}'
         ).set_author(
-            name=self.bot.bot_name(ctx),
-            icon_url=f"https://raw.githubusercontent.com/CoBiG2/hpc-bot/extras/img/loki.png")
-        await self.bot.send_message(ctx, f'test message from bot "{self.bot.bot_name(ctx)}"', embed=embed)
+            name="test command",
+            icon_url="https://discord.com/assets/eed642a423f5147c48ad395310a3d797.svg")
+        await self.bot.send_message(ctx, f'this is a test message from bot "{self.bot.bot_name(ctx)}"', embed=embed)
 
     @commands.command()
     @commands.max_concurrency(1)
@@ -137,7 +136,7 @@ class Commands(commands.Cog):
         Total space occupied by each user's home folder on the server(s)
         """
         command = 'sudo du -sh /home/*'
-        home_embed = await self.new_home_embed(ctx, "home")
+        home_embed = await self.new_home_embed(ctx)
         home_message_sent = await self.bot.send_message(ctx, embed=home_embed)
         await self.run_shell_cmd(ctx, command, self.handle_home,
                                  embed=home_embed, message_sent=home_message_sent)
@@ -161,18 +160,16 @@ class Commands(commands.Cog):
             embed=kwargs.get('embed').add_field(
                 name=user, value=usage, inline=True))
 
-    async def new_home_embed(self, ctx, command_name):
+    async def new_home_embed(self, ctx):
         """Generates a new default embed for the home command"""
-        bot_name = self.bot.bot_name(ctx)
         bot_color = await self.bot.get_color()
         return discord.Embed(
-            title="size of all __home__ folders:",
             color=bot_color,
         ).set_footer(
-            text=f'{command_name} 🏠'
+            text=f'🖥️ {ctx.command.name}'
         ).set_author(
-            name=bot_name,
-            icon_url=f"https://raw.githubusercontent.com/CoBiG2/hpc-bot/extras/img/{bot_name.lower()}.png"
+            name="size of each home folder",
+            icon_url="https://discord.com/assets/deea117ff9db07e31d8658a505394d01.svg"
         )
 
     async def run_shell_cmd(self, ctx, cmd, handle_output_line, **kwargs):
