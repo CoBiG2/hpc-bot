@@ -131,13 +131,14 @@ class Commands(commands.Cog):
             line_contents = line.split()
             # ignores first line, which only contains column headers
             if line_contents[0] == 'Mem:':
-                _, ram_total, ram_used, ram_free, _, _, ram_available = line_contents
+                _, ram_total, ram_used, ram_free, _, ram_cache, ram_available = line_contents
                 await kwargs.get('message_sent').edit(
                     embed=kwargs.get('embed').add_field(
                         name='RAM 💾',
                         value=f'total : {ram_total}\n'
                               f'used : {ram_used}\n'
                               f'free : {ram_free}\n'
+                              f'cache : {ram_cache}\n'
                               f'available : {ram_available}',
                         inline=True))
             elif line_contents[0] == 'Swap:':
