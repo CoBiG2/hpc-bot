@@ -62,12 +62,11 @@ class Commands(commands.Cog):
     async def test(self, ctx):
         bot_color = await self.bot.get_color()
         embed = discord.Embed(
+            description="🔧 test command",
             color=bot_color
         ).set_footer(
-            text=f'🔧 {ctx.command.name}'
-        ).set_author(
-            name="test command",
-            icon_url="https://discord.com/assets/eed642a423f5147c48ad395310a3d797.svg")
+            text=f'🖥️ {ctx.command.name}'
+        )
         await self.bot.send_message(ctx, f'this is a test message from bot "{self.bot.bot_name(ctx)}"', embed=embed)
 
     @commands.command()
@@ -164,12 +163,10 @@ class Commands(commands.Cog):
         """Generates a new default embed for the home command"""
         bot_color = await self.bot.get_color()
         return discord.Embed(
+            description="🏠 size of each home folder",
             color=bot_color,
         ).set_footer(
             text=f'🖥️ {ctx.command.name}'
-        ).set_author(
-            name="size of each home folder",
-            icon_url="https://discord.com/assets/deea117ff9db07e31d8658a505394d01.svg"
         )
 
     async def run_shell_cmd(self, ctx, cmd, handle_output_line, **kwargs):
