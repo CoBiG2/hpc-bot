@@ -3,7 +3,7 @@ Description=hpc-bot for Discord
 
 [Service]
 Type=simple
-ExecStart=/bin/bash -a -c 'source ~/.bashrc && exec ~/.local/bin/hpc-bot -c ~/.local/etc/hpc_bot/config/config'
+ExecStart=/bin/bash -a -c 'source ~/.bashrc && exec ~/.local/bin/hpc-bot -c ~/.local/etc/hpc_bot/config'
 
 [Install]
 WantedBy=default.target

@@ -58,7 +58,7 @@ def config_parser(cli, cli_parsed):
     cli holds all the arguments metadata
     cli_parsed holds the parsed arguments
     """
-    with open(os.path.abspath("hpc_bot/config/config")) as config_data:
+    with open(os.path.abspath(cli_parsed.config)) as config_data:
         configs = json.load(config_data)
 
     if 'token' in configs and cli_parsed.token == cli.get_default('token'):
@@ -94,7 +94,7 @@ def arguments_handler():
                      default=socket.gethostname())
     cli.add_argument('-a',
                      dest='avatar',
-                     help="Bot avatar image location (only .jpeg or .png). Sets bot avatar. "
+                     help="Bot avatar image path (only .jpeg or .png). Sets bot avatar. "
                           "Ignoring this argument will leave your bot's avatar unchanged",
                      default='')
     cli.add_argument('-tc',
@@ -103,13 +103,14 @@ def arguments_handler():
                      default='hpc-bots')
     cli.add_argument('-l',
                      dest='log',
-                     help='Log file location. If file exists, logs will be appended to it. '
+                     help='Log file path. If file exists, logs will be appended to it. '
                           'Default is "./bot.log"',
                      default='bot.log')
-    cli.add_argument('--config',
+    cli.add_argument('-c',
                      dest='config',
-                     help='Use config file (located at hpc_bot/config/)',
-                     action='store_true')
+                     help='Config file path. Bot parameters will be loaded from config file. '
+                          'Command line arguments take precedence over config parameters.',
+                     default='')
     cli_parsed = cli.parse_args()
 
     if cli_parsed.config:
@@ -117,7 +118,7 @@ def arguments_handler():
 
     # token is required
     if not cli_parsed.token:
-        cli.error('Bot token is required for bot to run')
+        cli.error('Bot token is required for bot to run (-t TOKEN)')
 
     return cli_parsed
 

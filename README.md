@@ -26,7 +26,7 @@ A repository to host code to build a discord bot
     Alternatively, define a config file inside the `config` folder and use the `--config` argument to load it (`TOKEN` can be defined in the config file as well)
     
     ```
-    usage: hpc_bot.py [-h] [-t TOKEN] [-n NAME] [-a AVATAR] [-tc BOT_TEXT_CHANNEL] [-l LOG] [--config]
+    usage: hpc_bot.py [-h] [-t TOKEN] [-n NAME] [-a AVATAR] [-tc BOT_TEXT_CHANNEL] [-l LOG] [-c CONFIG]
 
     Run hpc-bot discord Bot
     
@@ -34,10 +34,10 @@ A repository to host code to build a discord bot
       -h, --help            show this help message and exit
       -t TOKEN              Bot token. REQUIRED. Get one here: https://discordapp.com/developers/applications/me
       -n NAME               Bot name. Default is computer host name (in this case: "My Computer")
-      -a AVATAR             Bot avatar image location (only .jpeg or .png). Sets bot avatar. Ignoring this argument will leave your bot's avatar unchanged
+      -a AVATAR             Bot avatar image path (only .jpeg or .png). Sets bot avatar. Ignoring this argument will leave your bot's avatar unchanged
       -tc BOT_TEXT_CHANNEL  Text channel where bot will send its messages. Default is "hpc-bots"
-      -l LOG                Log file location. If file exists, logs will be appended to it. Default is "./bot.log"
-      --config              Use config file (located at hpc_bot/config/)
+      -l LOG                Log file path. If file exists, logs will be appended to it. Default is "./bot.log"
+      -c CONFIG             Config file path. Bot parameters will be loaded from config file. Command line arguments take precedence over config parameters.
     ```
    
    `config` file structure (every parameter is optional):
