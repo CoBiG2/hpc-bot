@@ -81,19 +81,25 @@ class Commands(commands.Cog):
         Server status
         CPU, RAM and total disk usage of the server(s)
         """
-        command_cpu_and_uptime = 'uptime'
-        command_ram_and_swap = 'free -gh'
-        command_disk_usage = 'df -h --total | tail -n 1'
-        cpu_ok = await self.run_shell_cmd(ctx, command_cpu_and_uptime,
-                                          partial(self.handle_status, cmd_output='cpu_and_time'))
-        ram_ok = await self.run_shell_cmd(ctx, command_ram_and_swap,
-                                          partial(self.handle_status, cmd_output='ram_and_swap'))
-        disk_ok = await self.run_shell_cmd(ctx, command_disk_usage,
-                                           partial(self.handle_status, cmd_output='disk_usage'))
-        if all((cpu_ok, ram_ok, disk_ok)):
-            await self.command_finished_ok(ctx)
+        cmds = {
+            'cpu_and_time': 'uptime',
+            'ram_and_swap': 'free -gh',
+            'disk_usage':   'df -h --total | tail -n 1'
+        }
+        status_embed = await self.new_status_embed(ctx)
+        status_message_sent = await self.bot.send_message(ctx, embed=status_embed)
 
-    async def handle_status(self, ctx, line, cmd_output=''):
+        for cmd_name, cmd in cmds.items():
+            ok = await self.run_shell_cmd(
+                ctx, cmd,
+                partial(self.handle_status, cmd_output=cmd_name),
+                embed=status_embed,
+                message_sent=status_message_sent)
+            if not ok:
+                return
+        await self.command_finished_ok(ctx)
+
+    async def handle_status(self, ctx, line, cmd_output='', **kwargs):
         """
         Handles status command output
 
@@ -108,32 +114,62 @@ class Commands(commands.Cog):
         """
         if cmd_output == 'cpu_and_time':
             uptime = line[line.find('up ')+3:line.find('user')].rsplit(',', maxsplit=1)[0]
-            cpu_usage = line[line.rfind('load average: ')+14:]  # 1, 5 and 15 minutes average
-            await self.bot.send_message(ctx, f'uptime: {uptime}\ncpu usage: {cpu_usage}')
+            cpu = line[line.rfind('load average: ')+14:].split(', ')  # 1, 5 and 15 minutes average
+            await kwargs.get('message_sent').edit(
+                embed=kwargs.get('embed').add_field(
+                    name='UP time 🕒',
+                    value=uptime,
+                    inline=True
+                ).add_field(
+                    name='CPU 🎛️',
+                    value=f'1min:    {cpu[0]}\n'
+                          f'5min:   {cpu[1]}\n'
+                          f'15min:  {cpu[2]}',
+                    inline=True))
 
         elif cmd_output == 'ram_and_swap':
             line_contents = line.split()
             # ignores first line, which only contains column headers
             if line_contents[0] == 'Mem:':
                 _, ram_total, ram_used, ram_free, _, _, ram_available = line_contents
-                await self.bot.send_message(
-                    ctx,
-                    f'ram:\ntotal {ram_total}\nused {ram_used}\nfree {ram_free}\navailable {ram_available}')
+                await kwargs.get('message_sent').edit(
+                    embed=kwargs.get('embed').add_field(
+                        name='RAM 💾',
+                        value=f'total:        {ram_total}\n'
+                              f'used:        {ram_used}\n'
+                              f'free:          {ram_free}\n'
+                              f'available:  {ram_available}',
+                        inline=True))
             elif line_contents[0] == 'Swap:':
                 _, swap_total, swap_used, swap_free = line_contents
-                await self.bot.send_message(ctx, f'swap:\ntotal {swap_total}\nused {swap_used}\nfree {swap_free}')
+                await kwargs.get('message_sent').edit(
+                    embed=kwargs.get('embed').add_field(
+                        name='SWAP 📼',
+                        value=f'total:        {swap_total}\n'
+                              f'used:        {swap_used}\n'
+                              f'free:          {swap_free}\n',
+                        inline=True))
 
         elif cmd_output == 'disk_usage':
             _, disk_size, disk_used, disk_available, disk_use_percentage, _ = line.split()
-            await self.bot.send_message(
-                ctx,
-                f'disk:\nsize {disk_size}\nused {disk_used}\navailable {disk_available}\n'
-                f'used percentage {disk_use_percentage}')
+            await kwargs.get('message_sent').edit(
+                embed=kwargs.get('embed').add_field(
+                    name='DISK 💿',
+                    value=f'size:           {disk_size}\n'
+                          f'available:  {disk_used}\n'
+                          f'used:          {disk_available}\n'
+                          f'used %:     {disk_use_percentage}\n',
+                    inline=True))
 
-        # TODO embed
-        # TODO:
-        #   - see if there's a "status" message from this server/machine (if not create one)
-        #   - edit that message with the output of the command as it is being read
+    async def new_status_embed(self, ctx):
+        """Generates a new default embed for the status command"""
+        bot_color = await self.bot.get_color()
+        return discord.Embed(
+            description="🎚️ server status",
+            color=bot_color,
+        ).set_footer(
+            text=f'🖥️ {ctx.command.name}'
+        )
 
     @commands.command()
     @commands.max_concurrency(1)
@@ -227,7 +263,7 @@ class Commands(commands.Cog):
             # error return code
             else:
                 await ctx.send(f'Error: command `{ctx.command.name}` '
-                               f'terminated with error code `{process.returncode}`')
+                               f'terminated with an error code `{process.returncode}`')
                 # TODO find a way to get return code name with python...
 
             # delete message that was being updated, if any
@@ -235,6 +271,6 @@ class Commands(commands.Cog):
             if message_sent:
                 await message_sent.delete()
 
-            self.logger.error(f'Error while running command: {ctx.command.name} ("{cmd}")\n'
+            self.logger.error(f'Error code {process.returncode} while running command: {ctx.command.name} ("{cmd}")\n'
                               f'{stderr.decode("utf-8").rstrip()}')
             return False
