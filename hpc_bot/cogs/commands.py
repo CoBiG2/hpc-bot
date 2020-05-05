@@ -57,6 +57,10 @@ class Commands(commands.Cog):
         if not isinstance(error, commands.MaxConcurrencyReached):
             self.logger.error(f'Error calling command {ctx.command.name}:\n{traceback.format_exc()}')
 
+    async def command_finished_ok(self, ctx):
+        """Commands can call this when finished"""
+        await ctx.send(f'Command `{ctx.command.name}` finished running successfully')
+
     @commands.command()
     @commands.check(checks.can_write_to_bot_text_channel())
     async def test(self, ctx):
@@ -80,9 +84,14 @@ class Commands(commands.Cog):
         command_cpu_and_uptime = 'uptime'
         command_ram_and_swap = 'free -gh'
         command_disk_usage = 'df -h --total | tail -n 1'
-        await self.run_shell_cmd(ctx, command_cpu_and_uptime, partial(self.handle_status, cmd_output='cpu_and_time'))
-        await self.run_shell_cmd(ctx, command_ram_and_swap, partial(self.handle_status, cmd_output='ram_and_swap'))
-        await self.run_shell_cmd(ctx, command_disk_usage, partial(self.handle_status, cmd_output='disk_usage'))
+        cpu_ok = await self.run_shell_cmd(ctx, command_cpu_and_uptime,
+                                          partial(self.handle_status, cmd_output='cpu_and_time'))
+        ram_ok = await self.run_shell_cmd(ctx, command_ram_and_swap,
+                                          partial(self.handle_status, cmd_output='ram_and_swap'))
+        disk_ok = await self.run_shell_cmd(ctx, command_disk_usage,
+                                           partial(self.handle_status, cmd_output='disk_usage'))
+        if all((cpu_ok, ram_ok, disk_ok)):
+            await self.command_finished_ok(ctx)
 
     async def handle_status(self, ctx, line, cmd_output=''):
         """
@@ -137,8 +146,10 @@ class Commands(commands.Cog):
         command = 'sudo du -sh /home/*'
         home_embed = await self.new_home_embed(ctx)
         home_message_sent = await self.bot.send_message(ctx, embed=home_embed)
-        await self.run_shell_cmd(ctx, command, self.handle_home,
-                                 embed=home_embed, message_sent=home_message_sent)
+        ok = await self.run_shell_cmd(ctx, command, self.handle_home,
+                                      embed=home_embed, message_sent=home_message_sent)
+        if ok:
+            await self.command_finished_ok(ctx)
 
     async def handle_home(self, ctx, line, **kwargs):
         """
@@ -172,6 +183,7 @@ class Commands(commands.Cog):
     async def run_shell_cmd(self, ctx, cmd, handle_output_line, **kwargs):
         """
         Runs shell command 'cmd' on the local machine
+        Sends error message to origin channel on command error
 
         Parameters
         ----------
@@ -181,6 +193,11 @@ class Commands(commands.Cog):
             command to be executed
         handle_output_line: function
             function to handle each line of output produced by the command
+
+        Returns
+        -------
+        bool
+            True if command ran to conclusion, False if an error occurred.
         """
         async with self.bot.bot_text_channel.typing():
             process = await asyncio.create_subprocess_shell(
@@ -195,28 +212,29 @@ class Commands(commands.Cog):
 
             # no error while running the command
             if process.returncode == 0:
-                await ctx.send(f'Command `{ctx.command.name}` finished running successfully')
+                return True
 
             # errors
+            _, stderr = await process.communicate()  # wait for command to terminate and finish reading stderr
+
+            # signal terminated
+            if process.returncode < 0:
+                signal_code = abs(process.returncode)
+                await ctx.send(f'Error: command `{ctx.command.name}` '
+                               f'terminated by signal `{signal_code}` '
+                               f'({signal.Signals(signal_code).name})')
+
+            # error return code
             else:
-                _, stderr = await process.communicate()  # wait for command to terminate and finish reading stderr
+                await ctx.send(f'Error: command `{ctx.command.name}` '
+                               f'terminated with error code `{process.returncode}`')
+                # TODO find a way to get return code name with python...
 
-                # signal terminated
-                if process.returncode < 0:
-                    signal_code = abs(process.returncode)
-                    await ctx.send(f'Error: command `{ctx.command.name}` '
-                                   f'terminated by signal `{signal_code}` '
-                                   f'({signal.Signals(signal_code).name})')
+            # delete message that was being updated, if any
+            message_sent = kwargs.get('message_sent')
+            if message_sent:
+                await message_sent.delete()
 
-                # error return code
-                else:
-                    await ctx.send(f'Error: command `{ctx.command.name}` '
-                                   f'terminated with error code `{process.returncode}`')
-                    # TODO find a way to get return code name with python...
-
-                # delete message that was being updated, if any
-                message_sent = kwargs.get('message_sent')
-                if message_sent:
-                    await message_sent.delete()
-
-                self.logger.error(stderr.decode('utf-8').rstrip())
+            self.logger.error(f'Error while running command: {ctx.command.name} ("{cmd}")\n'
+                              f'{stderr.decode("utf-8").rstrip()}')
+            return False
