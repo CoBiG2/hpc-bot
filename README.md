@@ -57,7 +57,7 @@ A repository to host code to build a discord bot
     In order to use it you must first install `hpc-bot` as a module:
 
     ```shell script
-    pip install .
+    pip install --user .
     ```
   
     then create a config file like the one mentioned in `4.` under `~/.local/etc/hpc_bot/config`.
