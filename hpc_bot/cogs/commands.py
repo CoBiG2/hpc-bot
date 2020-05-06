@@ -61,7 +61,9 @@ class Commands(commands.Cog):
 
     async def command_finished_ok(self, ctx):
         """Commands can call this when finished"""
-        await ctx.send(f'Command `{ctx.command.name}` finished running successfully')
+        message_ok = await ctx.send(f'Command `{ctx.command.name}` finished. '
+                                    f'Check output at {ctx.bot.bot_text_channel.mention}')
+        await message_ok.delete(delay=30)
 
     @commands.command()
     @commands.check(checks.can_write_to_bot_text_channel())
@@ -74,6 +76,7 @@ class Commands(commands.Cog):
             text=f'🖥️ {ctx.command.name}'
         )
         await self.bot.send_message(ctx, f'this is a test message from bot "{self.bot.bot_name(ctx)}"', embed=embed)
+        await self.command_finished_ok(ctx)
 
     @commands.command()
     @commands.max_concurrency(1)
