@@ -136,7 +136,7 @@ class Commands(commands.Cog):
                 _, ram_total, ram_used, ram_free, _, ram_cache, ram_available = line_contents
                 await kwargs.get('message_sent').edit(
                     embed=kwargs.get('embed').add_field(
-                        name='RAM ',
+                        name='RAM 🧠',
                         value=f'total : {ram_total}\n'
                               f'used : {ram_used}\n'
                               f'free : {ram_free}\n'
@@ -157,7 +157,7 @@ class Commands(commands.Cog):
             _, disk_size, disk_used, disk_available, disk_use_percentage, _ = line.split()
             await kwargs.get('message_sent').edit(
                 embed=kwargs.get('embed').add_field(
-                    name='STORAGE ',
+                    name='STORAGE 🖴',
                     value=f'size : {disk_size}\n'
                           f'available : {disk_used}\n'
                           f'used : {disk_available}\n'
