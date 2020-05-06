@@ -38,7 +38,7 @@ import json
 import logging
 import os
 import socket
-import traceback
+import sys
 import types
 import discord
 from io import BytesIO
@@ -222,11 +222,15 @@ def main():
     #
 
     @bot.event
+    async def on_error(event, *args, **kwargs):
+        # all uncaught/unhandled exceptions come through here
+        logger.exception(f'When handling event: {event}, with arguments: {args}\n{sys.exc_info()[2]}')
+
+    @bot.event
     async def on_command_error(ctx, exception):
         # ignore non-existent commands
         if isinstance(exception, commands.CommandNotFound):
             return
-        logger.error(f'Error:\n{traceback.format_exc()}')
 
     @bot.event
     async def on_guild_join(guild):

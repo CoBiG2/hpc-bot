@@ -23,7 +23,7 @@ Commands Cog - bot commands
 import asyncio
 import logging
 import signal
-import traceback
+import sys
 import discord
 from functools import partial
 from discord.ext import commands
@@ -54,8 +54,10 @@ class Commands(commands.Cog):
 
     async def cog_command_error(self, ctx, error):
         """Called when an error is raised inside this cog"""
-        if not isinstance(error, commands.MaxConcurrencyReached):
-            self.logger.error(f'Error calling command {ctx.command.name}:\n{traceback.format_exc()}')
+        if isinstance(error, (commands.MaxConcurrencyReached, commands.CheckFailure)):
+            self.logger.warning(f'When calling command {ctx.command.name}: {error}')
+        else:
+            self.logger.error(f'Error calling command {ctx.command.name}:\n{sys.exc_info()[2]}')
 
     async def command_finished_ok(self, ctx):
         """Commands can call this when finished"""

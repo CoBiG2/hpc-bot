@@ -23,13 +23,21 @@ Command checks
 import discord
 
 
-async def no_channel_info_message(ctx, channel):
-    await ctx.send(f"Error: Channel `{channel.name}` doesn't exist. Please create it.")
+async def info_message(ctx, user, channel, what):
+    # can write to channel where command originated?
+    permissions = ctx.channel.permissions_for(user)
+    if getattr(permissions, 'send_messages'):
+
+        # send info message
+        if what == 'no_channel':
+            await ctx.send(f"Error: Channel `{channel.name}` doesn't exist. Please create it.")
+        elif what == 'no_permission':
+            await ctx.send(f"Error: Can't send messages to channel `{channel.name}`. Check bot permissions.")
 
 
 def can_write_to_bot_text_channel():
     """
-    Similar to discord.ext.commands.bot_has_permissions
+    Adapted and built from discord.ext.commands.bot_has_permissions
     Checks if channel exists and if bot has write permissions
     """
     async def predicate(ctx):
@@ -43,20 +51,20 @@ def can_write_to_bot_text_channel():
 
         # Bot doesn't recognize the bot text channel (deleted or didn't ever exist)
         if not channel:
-            await no_channel_info_message(ctx, channel)
+            await info_message(ctx, me, channel, 'no_channel')
             return False
 
         # if, for some reason, the bot couldn't find out for himself that the bot channel
         # doesn't exist or was deleted, this is a redundant check
         channel_found = discord.utils.get(guild.text_channels, name=channel.name)  # does channel exist
         if not channel_found:
-            await no_channel_info_message(ctx, channel)
+            await info_message(ctx, me, channel, 'no_channel')
             return False
 
         permissions = channel.permissions_for(me)
         permission = getattr(permissions, 'send_messages')
         if not permission:
-            await ctx.send(f"Error: Can't send messages to channel `{channel.name}`. Check bot permissions.")
+            await info_message(ctx, me, channel, 'no_permission')
             return False
 
         return True
