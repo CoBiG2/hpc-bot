@@ -159,8 +159,8 @@ class Commands(commands.Cog):
                 embed=kwargs.get('embed').add_field(
                     name='STORAGE 🖴',
                     value=f'size : {disk_size}\n'
-                          f'available : {disk_used}\n'
-                          f'used : {disk_available}\n'
+                          f'available : {disk_available}\n'
+                          f'used : {disk_used}\n'
                           f'used % : {disk_use_percentage}\n',
                     inline=True))
 
