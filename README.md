@@ -20,7 +20,7 @@ A repository to host code to build a discord bot
     make upgrade-pip
     make install-dependencies
     ```
-4.  Run
+4.  Run, through the command line
 
     Pass command line arguments as needed, `TOKEN` being the only one required (all others have defaults).
     Alternatively, define a config file inside the `config` folder and use the `--config` argument to load it (`TOKEN` can be defined in the config file as well)
@@ -51,21 +51,29 @@ A repository to host code to build a discord bot
     }
     ```
 
-4.1  Run using `systemd`
+5.  Run, using `systemd`
 
-  `hpc-bot` has a `systemd` service file. You can use it to manage starting and stopping the bot. In order to use it you must create a config file like the one mentioned in `4.` under `~/.local/etc/hpc_bot/config`. You can then use `systemctl` to control how your bot starts:
+    `hpc-bot` has a `systemd` service file. You can use it to manage starting and stopping the bot.
+    In order to use it you must first install `hpc-bot` as a module:
 
-  ```bash
-  systemctl --user start hpc-bot.service  # Starts the bot
-  systemctl --user stop hpc-bot.service  # Stops the bot
-  systemctl --user status hpc-bot.service  # Gets a short status summary of the bot
-  systemctl --user enable hpc-bot.service  # Makes the bot startup whenever your user logs in
-  ```
-
-  In order to make the bot start whenever the system boots, you must enable `user-linger`:
-
-  ```bash
-  loginctl enable-linger username
-  ```
-
-  This command must be run as `root`, and you have to replace `username` with the name of the user for whom the bot is installed.
+    ```shell script
+    pip install .
+    ```
+  
+    then create a config file like the one mentioned in `4.` under `~/.local/etc/hpc_bot/config`.
+    You can then use `systemctl` to control how your bot starts:
+    
+    ```shell script
+    systemctl --user start hpc-bot.service    # Starts the bot
+    systemctl --user stop hpc-bot.service     # Stops the bot
+    systemctl --user status hpc-bot.service   # Gets a short status summary of the bot
+    systemctl --user enable hpc-bot.service   # Makes the bot startup whenever your user logs in
+    ```
+    
+    In order to make the bot start whenever the system boots, you must enable `user-linger`:
+    
+    ```shell script
+    loginctl enable-linger <username>
+    ```
+    
+    This command must be run as `root`, and you have to replace `username` with the name of the user for whom the bot is installed.
