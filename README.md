@@ -2,34 +2,34 @@
 A repository to host code to build a discord bot
 
 ## Instructions
-1. Clone repository
+1.  Clone repository
     ```shell script
     git clone https://github.com/CoBiG2/hpc-bot.git
     ```
-   
-2. Install python 3.8
-    * Downloads [here](https://www.python.org/downloads/), installation instructions [here](https://docs.python.org/3.8/using/unix.html)
-    * Alternatively, install to user space (on `Linux`) with [conda](https://docs.conda.io/projects/conda/en/latest/):
+
+2.  Install python 3.8
+    *   Downloads [here](https://www.python.org/downloads/), installation instructions [here](https://docs.python.org/3.8/using/unix.html)
+    *   Alternatively, install to user space (on `Linux`) with [conda](https://docs.conda.io/projects/conda/en/latest/):
         ```shell script
         make install-conda
         make install-python
         ```
 
-3. Install dependencies
+3.  Install dependencies
     ```shell script
     make upgrade-pip
     make install-dependencies
     ```
-3. Run
+4.  Run
 
     Pass command line arguments as needed, `TOKEN` being the only one required (all others have defaults).
     Alternatively, define a config file inside the `config` folder and use the `--config` argument to load it (`TOKEN` can be defined in the config file as well)
-    
+
     ```
     usage: hpc_bot.py [-h] [-t TOKEN] [-n NAME] [-a AVATAR] [-tc BOT_TEXT_CHANNEL] [-l LOG] [-c CONFIG]
 
     Run hpc-bot discord Bot
-    
+
     optional arguments:
       -h, --help            show this help message and exit
       -t TOKEN              Bot token. REQUIRED. Get one here: https://discordapp.com/developers/applications/me
@@ -39,14 +39,14 @@ A repository to host code to build a discord bot
       -l LOG                Log file path. If file exists, logs will be appended to it. Default is "./bot.log"
       -c CONFIG             Config file path. Bot parameters will be loaded from config file. Command line arguments take precedence over config parameters.
     ```
-   
-   `config` file structure (every parameter is optional):
-   ```json
-   {
+
+    `config` file structure (every parameter is optional):
+    ```json
+    {
       "token": "<BOT-TOKEN> (see https://discordapp.com/developers/applications/me')",
       "name": "<SERVER-NAME>",
       "avatar": "<BOT-AVATAR-IMAGE-PATH>",
       "bot_text_channel": "<BOT-TEXT-CHANNEL>",
       "log": "<LOG-FILE-PATH>"
-   }
-   ```
+    }
+    ```
