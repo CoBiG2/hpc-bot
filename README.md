@@ -50,3 +50,22 @@ A repository to host code to build a discord bot
       "log": "<LOG-FILE-PATH>"
     }
     ```
+
+4.1  Run using `systemd`
+
+  `hpc-bot` has a `systemd` service file. You can use it to manage starting and stopping the bot. In order to use it you must create a config file like the one mentioned in `4.` under `~/.local/etc/hpc_bot/config`. You can then use `systemctl` to control how your bot starts:
+
+  ```bash
+  systemctl --user start hpc-bot.service  # Starts the bot
+  systemctl --user stop hpc-bot.service  # Stops the bot
+  systemctl --user status hpc-bot.service  # Gets a short status summary of the bot
+  systemctl --user enable hpc-bot.service  # Makes the bot startup whenever your user logs in
+  ```
+
+  In order to make the bot start whenever the system boots, you must enable `user-linger`:
+
+  ```bash
+  loginctl enable-linger username
+  ```
+
+  This command must be run as `root`, and you have to replace `username` with the name of the user for whom the bot is installed.
