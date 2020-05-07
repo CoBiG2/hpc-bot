@@ -36,14 +36,11 @@ except ImportError:
 
 class Commands(commands.Cog):
 
-    def __init__(self, bot, logfile):
+    def __init__(self, bot, logfile_handler):
         super().__init__()
         self.bot = bot
-
-        self.logger = logging.getLogger(__name__)
-        handler = logging.FileHandler(filename=logfile, encoding='utf-8', mode='a')
-        handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
-        self.logger.addHandler(handler)
+        self.logger = logging.getLogger('hpc-bot.Commands')
+        self.logger.addHandler(logfile_handler)
 
     async def cog_before_invoke(self, ctx):
         """Called before each command invocation"""
@@ -62,7 +59,7 @@ class Commands(commands.Cog):
     async def command_finished_ok(self, ctx):
         """Commands can call this when finished"""
         message_ok = await ctx.send(f'Command `{ctx.command.name}` finished. '
-                                    f'Check output at {ctx.bot.bot_text_channel.mention}')
+                                    f'Check output at {self.bot.bot_text_channel.mention}')
         await message_ok.delete(delay=30)
 
     @commands.command()
