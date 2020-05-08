@@ -33,7 +33,7 @@ A repository to host code to build a discord bot
     optional arguments:
       -h, --help            show this help message and exit
       -t TOKEN              Bot token. REQUIRED. Get one here: https://discordapp.com/developers/applications/me
-      -n NAME               Bot name. Default is computer host name (in this case: "My Computer")
+      -n NICKNAME           Bot nickname. Default is computer host name (in this case: "My Computer")
       -a AVATAR             Bot avatar image path (only .jpeg or .png). Sets bot avatar. Ignoring this argument will leave your bot's avatar unchanged
       -tc BOT_TEXT_CHANNEL  Text channel where bot will send its messages. Default is "hpc-bots"
       -l LOG                Log file path. If file exists, logs will be appended to it. Default is "./bot.log"
@@ -44,7 +44,7 @@ A repository to host code to build a discord bot
     ```json
     {
       "token": "<BOT-TOKEN> (see https://discordapp.com/developers/applications/me')",
-      "name": "<SERVER-NAME>",
+      "nickname": "<SERVER-NICKNAME>",
       "avatar": "<BOT-AVATAR-IMAGE-PATH>",
       "bot_text_channel": "<BOT-TEXT-CHANNEL>",
       "log": "<LOG-FILE-PATH>"
