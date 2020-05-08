@@ -205,7 +205,8 @@ class Bot(commands.Bot):
         """
         Changes bot "presence" message
         """
-        await self.change_presence(activity=discord.Game(f'Type @{guild.me.nick} help'))
+        await self.change_presence(activity=discord.Activity(type=discord.ActivityType.watching,
+                                                             name=f'for @{guild.me.nick} help'))
 
     async def send_message(self, ctx, *args, **kwargs):
         """
