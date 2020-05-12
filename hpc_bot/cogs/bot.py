@@ -44,7 +44,8 @@ class Bot(commands.Bot):
 
         # cogs/commands
         self.add_cog(cogs.Commands(self, logfile_handler))
-        self.help_command = commands.MinimalHelpCommand()
+        self.help_command = cogs.Help()
+        self.help_command.cog = self.cogs['Commands']
 
         # bot variables
         self.nickname = nickname

@@ -25,14 +25,26 @@ import discord
 
 async def info_message(ctx, user, channel, what):
     # can write to channel where command originated?
-    permissions = ctx.channel.permissions_for(user)
-    if getattr(permissions, 'send_messages'):
+    if await can_write_to_origin_channel(user)(ctx):
 
         # send info message
         if what == 'no_channel':
             await ctx.send(f"Error: Channel `{channel.name}` doesn't exist. Please create it.")
         elif what == 'no_permission':
             await ctx.send(f"Error: Can't send messages to channel `{channel.name}`. Check bot permissions.")
+
+
+def can_write_to_origin_channel(user):
+    """
+    Checks if user has write permissions on channel where command originated
+    """
+    async def predicate(ctx):
+        permissions = ctx.channel.permissions_for(user)
+        if getattr(permissions, 'send_messages'):
+            return True
+        return False
+
+    return predicate
 
 
 def can_write_to_bot_text_channel():

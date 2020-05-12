@@ -3,3 +3,4 @@
 
 from .bot import *
 from .commands import *
+from .help import *

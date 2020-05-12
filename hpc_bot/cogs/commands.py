@@ -23,7 +23,7 @@ Commands Cog - bot commands
 import asyncio
 import logging
 import signal
-import sys
+import traceback
 import discord
 from functools import partial
 from discord.ext import commands
@@ -54,17 +54,32 @@ class Commands(commands.Cog):
         if isinstance(error, (commands.MaxConcurrencyReached, commands.CheckFailure)):
             self.logger.warning(f'When calling command {ctx.command.name}: {error}')
         else:
-            self.logger.error(f'Error calling command {ctx.command.name}:\n{sys.exc_info()[2]}')
+            self.logger.error(f'Error calling command {ctx.command.name}:\n{traceback.format_exc()}')
 
-    async def command_finished_ok(self, ctx):
+    async def command_finished_ok(self, ctx, msg=None):
         """Commands can call this when finished"""
-        message_ok = await ctx.send(f'Command `{ctx.command.name}` finished. '
-                                    f'Check output at {self.bot.bot_text_channel.mention}')
-        await message_ok.delete(delay=30)
+        # can send feedback message to channel where command originated?
+        me = ctx.guild.me if ctx.guild is not None else ctx.bot.user
+        can_write_to_origin_channel = checks.can_write_to_origin_channel(me)
+        if await can_write_to_origin_channel(ctx):
+
+            # feedback message
+            if not msg:  # default feedback message for commands
+                message = f'Command `{ctx.command.name}` finished'
+                # for private messages don't mention bot_text_channel
+                if not isinstance(ctx.channel, (discord.DMChannel, discord.GroupChannel)):
+                    message += f'. Check output at {self.bot.bot_text_channel.mention}'
+            else:
+                message = msg
+            message_ok = await ctx.send(message)
+            await message_ok.delete(delay=30)
 
     @commands.command()
     @commands.check(checks.can_write_to_bot_text_channel())
     async def test(self, ctx):
+        """
+        Test command
+        """
         bot_color = await self.bot.get_color()
         embed = discord.Embed(
             description="🔧 test command",
@@ -80,8 +95,7 @@ class Commands(commands.Cog):
     @commands.check(checks.can_write_to_bot_text_channel())
     async def status(self, ctx):
         """
-        Server status
-        CPU, RAM and total disk usage of the server(s)
+        Shows server status: CPU, RAM and total disk usage
         """
         cmds = {
             'cpu_and_time': 'uptime',
@@ -179,8 +193,7 @@ class Commands(commands.Cog):
     @commands.check(checks.can_write_to_bot_text_channel())
     async def home(self, ctx):
         """
-        Home folders disk space usage
-        Total space occupied by each user's home folder on the server(s)
+        Disk usage of each user's /home folder on the server
         """
         command = 'sudo du -sh /home/*'
         home_embed = await self.new_home_embed(ctx)
