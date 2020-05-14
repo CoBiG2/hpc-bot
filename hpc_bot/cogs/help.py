@@ -40,7 +40,7 @@ class Help(commands.MinimalHelpCommand):
         return f'This bot provides some commands that can retrieve ' \
                f'information from the hpc server it is associated with.\n' \
                f'Most commands output to the defined bot text channel ({bot_text_channel}).\n\n' \
-               f'Commands can be called by typing:   `{self.clean_prefix} [command]`\n' \
+               f'Commands can be called by typing:   `{self.clean_prefix}[command]`\n' \
                f'To get info on a certain command:     `{self.clean_prefix}{self.invoked_with} [command]`\n\n' \
                f'You can also send commands to the bot as private messages, in which case the ' \
                f'output of the command will be sent directly to you.'

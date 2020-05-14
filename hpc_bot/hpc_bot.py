@@ -34,6 +34,8 @@ __description__ = 'A discord bot to relay HPC information.'
 
 
 import argparse
+import copy
+import hashlib
 import json
 import logging
 import os
@@ -132,6 +134,14 @@ def main():
     log_handler = logging.FileHandler(filename=cli.log, encoding='utf-8', mode='a')
     log_handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
     logger.addHandler(log_handler)
+
+    # log arguments
+    args = copy.deepcopy(vars(cli))
+    hashed_token = hashlib.sha256(args['token'].encode()).hexdigest()  # token is hashed, for log privacy
+    args['token'] = f'sha256({hashed_token})'
+    for arg, value in args.items():
+        logger.info(f'Parameter:{arg}={value}')
+    del args
 
     # start bot
     logger.info('Starting bot')
