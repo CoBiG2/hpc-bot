@@ -77,7 +77,7 @@ class Commands(commands.Cog):
     async def handle_command_runtime(self, cmd_runtime, **kwargs):
         """Adds command runtime to sent message"""
         embed = kwargs.get('embed')
-        embed.description = f'ran in {cmd_runtime}s\n\n'
+        embed.description = f'ran in {cmd_runtime}s'
         await kwargs.get('message_sent').edit(embed=embed)
 
     @commands.command()
@@ -289,6 +289,7 @@ class Commands(commands.Cog):
 
             # errors
             _, stderr = await process.communicate()  # wait for command to terminate and finish reading stderr
+            stderr = stderr.decode("utf-8").rstrip().rsplit("\n", 1)[0]  # remove runtime from last line
 
             # signal terminated
             if process.returncode < 0:
@@ -308,6 +309,6 @@ class Commands(commands.Cog):
             if message_sent:
                 await message_sent.delete()
 
-            self.logger.error(f'Error code {process.returncode} while running command: {ctx.command.name} ("{cmd}")\n'
-                              f'{stderr.decode("utf-8").rstrip()}')
+            self.logger.error(f'Error code {process.returncode} while running command: {ctx.command.name} ({cmd})\n'
+                              f'{stderr}')
             return False
