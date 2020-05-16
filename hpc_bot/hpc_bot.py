@@ -130,9 +130,10 @@ def main():
     cli = arguments_handler()
 
     # logging stuff
-    log_handler = logging.FileHandler(filename=cli.log, encoding='utf-8', mode='a')
-    log_handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
-    logging.basicConfig(level=logging.INFO, handlers=[log_handler, logging.StreamHandler(sys.stderr)])
+    log_stderr_handler = logging.StreamHandler(sys.stderr)
+    log_file_handler = logging.FileHandler(filename=cli.log, encoding='utf-8', mode='a')
+    log_file_handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
+    logging.basicConfig(level=logging.INFO, handlers=[log_stderr_handler, log_file_handler])
     logger = logging.getLogger('hpc-bot.main')
 
     # log arguments
