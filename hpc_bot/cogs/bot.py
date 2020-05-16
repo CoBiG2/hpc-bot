@@ -35,15 +35,14 @@ except ImportError:
 
 class Bot(commands.Bot):
 
-    def __init__(self, nickname, avatar_path, bot_text_channel_name, logfile_handler, *args, **kwargs):
+    def __init__(self, nickname, avatar_path, bot_text_channel_name, *args, **kwargs):
         super().__init__(command_prefix=commands.when_mentioned, *args, **kwargs)
 
         # logger
         self.logger = logging.getLogger('hpc-bot.Bot')
-        self.logger.addHandler(logfile_handler)
 
         # cogs/commands
-        self.add_cog(cogs.Commands(self, logfile_handler))
+        self.add_cog(cogs.Commands(self))
         self.help_command = cogs.Help()
         self.help_command.cog = self.cogs['Commands']
 

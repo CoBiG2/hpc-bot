@@ -36,11 +36,10 @@ except ImportError:
 
 class Commands(commands.Cog):
 
-    def __init__(self, bot, logfile_handler):
+    def __init__(self, bot):
         super().__init__()
         self.bot = bot
         self.logger = logging.getLogger('hpc-bot.Commands')
-        self.logger.addHandler(logfile_handler)
 
     async def cog_before_invoke(self, ctx):
         """Called before each command invocation"""
@@ -74,6 +73,12 @@ class Commands(commands.Cog):
             message_ok = await ctx.send(message)
             await message_ok.delete(delay=30)
 
+    async def handle_command_runtime(self, cmd_runtime, **kwargs):
+        """Adds command runtime to sent message"""
+        embed = kwargs.get('embed')
+        embed.description = f'ran in {cmd_runtime}s'
+        await kwargs.get('message_sent').edit(embed=embed)
+
     @commands.command()
     @commands.check(checks.can_write_to_bot_text_channel())
     async def test(self, ctx):
@@ -82,7 +87,7 @@ class Commands(commands.Cog):
         """
         bot_color = await self.bot.get_color()
         embed = discord.Embed(
-            description="🔧 test command",
+            title="🔧 test command",
             color=bot_color
         ).set_footer(
             text=f'🖥️ {ctx.command.name}'
@@ -109,6 +114,7 @@ class Commands(commands.Cog):
             ok = await self.run_shell_cmd(
                 ctx, cmd,
                 partial(self.handle_status, cmd_output=cmd_name),
+                self.handle_command_runtime,
                 embed=status_embed,
                 message_sent=status_message_sent)
             if not ok:
@@ -182,7 +188,7 @@ class Commands(commands.Cog):
         """Generates a new default embed for the status command"""
         bot_color = await self.bot.get_color()
         return discord.Embed(
-            description="🎚️ server status",
+            title="🎚️ server status",
             color=bot_color,
         ).set_footer(
             text=f'🖥️ {ctx.command.name}'
@@ -198,8 +204,11 @@ class Commands(commands.Cog):
         command = 'sudo du -sh /home/*'
         home_embed = await self.new_home_embed(ctx)
         home_message_sent = await self.bot.send_message(ctx, embed=home_embed)
-        ok = await self.run_shell_cmd(ctx, command, self.handle_home,
-                                      embed=home_embed, message_sent=home_message_sent)
+        ok = await self.run_shell_cmd(ctx, command,
+                                      self.handle_home,
+                                      self.handle_command_runtime,
+                                      embed=home_embed,
+                                      message_sent=home_message_sent)
         if ok:
             await self.command_finished_ok(ctx)
 
@@ -226,13 +235,13 @@ class Commands(commands.Cog):
         """Generates a new default embed for the home command"""
         bot_color = await self.bot.get_color()
         return discord.Embed(
-            description="🏠 size of each home folder",
+            title="🏠 size of each home folder",
             color=bot_color,
         ).set_footer(
             text=f'🖥️ {ctx.command.name}'
         )
 
-    async def run_shell_cmd(self, ctx, cmd, handle_output_line, **kwargs):
+    async def run_shell_cmd(self, ctx, cmd, handle_output_line, handle_cmd_runtime, **kwargs):
         """
         Runs shell command 'cmd' on the local machine
         Sends error message to origin channel on command error
@@ -245,6 +254,10 @@ class Commands(commands.Cog):
             command to be executed
         handle_output_line: function
             function to handle each line of output produced by the command
+        handle_cmd_runtime: function
+            function to handle the single line of command runtime
+        kwargs:
+            should include 'embed' and 'message_sent'
 
         Returns
         -------
@@ -252,10 +265,13 @@ class Commands(commands.Cog):
             True if command ran to conclusion, False if an error occurred.
         """
         async with self.bot.bot_text_channel.typing():
+            # wrap command in GNU time (outputs "real" command runtime to stderr)
+            cmd = f'/usr/bin/time -f "%e" bash -c "{cmd}"'
+
             process = await asyncio.create_subprocess_shell(
                 cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
 
-            # read each line of stdout
+            # read each line of stdout and pass it to handling function
             while not process.stdout.at_eof():  # if command isn't done outputting to stdout
                 line_read = await process.stdout.readline()
                 line = line_read.decode('utf-8').rstrip()
@@ -264,10 +280,15 @@ class Commands(commands.Cog):
 
             # no error while running the command
             if process.returncode == 0:
+                # read command runtime from stderr and pass it to runtime handling function
+                cmd_runtime = await process.stderr.readline()
+                cmd_runtime = cmd_runtime.decode('utf-8').rstrip()
+                await handle_cmd_runtime(cmd_runtime, **kwargs)
                 return True
 
             # errors
             _, stderr = await process.communicate()  # wait for command to terminate and finish reading stderr
+            stderr = stderr.decode("utf-8").rstrip().rsplit("\n", 1)[0]  # remove runtime from last line
 
             # signal terminated
             if process.returncode < 0:
@@ -287,6 +308,6 @@ class Commands(commands.Cog):
             if message_sent:
                 await message_sent.delete()
 
-            self.logger.error(f'Error code {process.returncode} while running command: {ctx.command.name} ("{cmd}")\n'
-                              f'{stderr.decode("utf-8").rstrip()}')
+            self.logger.error(f'Error code {process.returncode} while running command: {ctx.command.name} ({cmd})\n'
+                              f'{stderr}')
             return False
