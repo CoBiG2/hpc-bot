@@ -40,6 +40,7 @@ import json
 import logging
 import os
 import socket
+import sys
 
 try:
     import cogs
@@ -129,11 +130,10 @@ def main():
     cli = arguments_handler()
 
     # logging stuff
-    logging.basicConfig(level=logging.INFO)
-    logger = logging.getLogger('hpc-bot.main')
     log_handler = logging.FileHandler(filename=cli.log, encoding='utf-8', mode='a')
     log_handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
-    logger.addHandler(log_handler)
+    logging.basicConfig(level=logging.INFO, handlers=[log_handler, logging.StreamHandler(sys.stderr)])
+    logger = logging.getLogger('hpc-bot.main')
 
     # log arguments
     args = copy.deepcopy(vars(cli))
@@ -149,7 +149,6 @@ def main():
         nickname=cli.nickname,
         avatar_path=cli.avatar,
         bot_text_channel_name=cli.bot_text_channel,
-        logfile_handler=log_handler
     )
     bot.run(cli.token)
     logger.info('Shutting down bot complete')

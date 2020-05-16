@@ -36,11 +36,10 @@ except ImportError:
 
 class Commands(commands.Cog):
 
-    def __init__(self, bot, logfile_handler):
+    def __init__(self, bot):
         super().__init__()
         self.bot = bot
         self.logger = logging.getLogger('hpc-bot.Commands')
-        self.logger.addHandler(logfile_handler)
 
     async def cog_before_invoke(self, ctx):
         """Called before each command invocation"""
