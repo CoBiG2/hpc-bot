@@ -31,7 +31,7 @@ except ImportError:
 
 
 class NotSupportedException(BaseException):
-    pass
+    """Python version not supported"""
 
 
 if float(f'{sys.version_info.major}.{sys.version_info.minor}') < 3.8:
@@ -74,7 +74,8 @@ setup(
               'hpc_bot.checks'],
     install_requires=requirements,
     keywords='discord-bot discord-py hpc-bot',
-    download_url='{0}/-/archive/{1}/hpc_bot-{1}.tar.gz'.format(hpc_bot.__url__, hpc_bot.__version__),
+    download_url='{0}/-/archive/{1}/hpc_bot-{1}.tar.gz'.format(hpc_bot.__url__,
+                                                               hpc_bot.__version__),
     classifiers=['Development Status :: 3 - Alpha',
                  'Intended Audience :: Science/Research',
                  'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',

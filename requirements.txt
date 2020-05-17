@@ -1,2 +1,2 @@
 discord.py==1.3.*   # discord API wrapper
-Pillow==7.1.*       # used to generate a color an image
+Pillow==7.1.*       # used to generate a color from an image

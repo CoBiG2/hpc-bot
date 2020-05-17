@@ -22,8 +22,8 @@ Bot Cog - bot class
 
 import logging
 import sys
-import discord
 from io import BytesIO
+import discord
 from discord.ext import commands
 from PIL import Image
 
@@ -34,7 +34,9 @@ except ImportError:
 
 
 class Bot(commands.Bot):
-
+    """
+    hpc-bot main bot class
+    """
     def __init__(self, nickname, avatar_path, bot_text_channel_name, *args, **kwargs):
         super().__init__(command_prefix=commands.when_mentioned, *args, **kwargs)
 
@@ -59,6 +61,9 @@ class Bot(commands.Bot):
     ########
 
     async def on_ready(self):
+        """
+        Called when bot finished initializing
+        """
         # check how many discord servers this bot is connected to (1 max)
         if len(self.guilds) > 1:
             self.logger.error('Bot can only be active on a single discord server')
@@ -71,18 +76,20 @@ class Bot(commands.Bot):
 
                 # set nickname
                 if guild.me.nick != self.nickname:
-                    self.logger.info(f'Setting nickname from "{guild.me.nick}" to "{self.nickname}"')
+                    self.logger.info(f'Setting nickname from "{guild.me.nick}"'
+                                     f' to "{self.nickname}"')
                     await guild.me.edit(nick=self.nickname, reason='Setting up bot nickname')
 
                 # check if bot-specific text channel exists
                 self.bot_text_channel = self.retrieve_bot_text_channel(guild)
                 if not self.bot_text_channel:
-                    self.logger.warning(f'No text channel named "{self.bot_text_channel_name}" exists '
-                                        f'on the "{guild}" discord server. No messages will be sent by '
-                                        f'the bot until this channel exists')
+                    self.logger.warning(
+                        f'No text channel named "{self.bot_text_channel_name}" exists on the'
+                        f' "{guild}" discord server. No messages will be sent by the bot until'
+                        ' this channel exists')
 
                 # presence 'Type help'
-                self.logger.info(f'Setting bot presence')
+                self.logger.info('Setting bot presence')
                 await self.change_bot_presence(guild)
 
             # bot avatar
@@ -98,7 +105,7 @@ class Bot(commands.Bot):
                 avatar = BytesIO(avatar)
 
             # bot color (based on avatar color)
-            self.logger.info(f'Setting bot color')
+            self.logger.info('Setting bot color')
             self.color = self.update_color(avatar)
             self.avatar_hash = self.user.avatar
 
@@ -108,6 +115,9 @@ class Bot(commands.Bot):
             self.logger.info('Bot is ready')
 
     async def on_guild_join(self, guild):
+        """
+        Called when joining a guild
+        """
         self.logger.info(f'Joining guild: {guild.name}')
         # leave additional discord servers (1 max)
         if len(self.guilds) > 1:
@@ -126,10 +136,14 @@ class Bot(commands.Bot):
             # check if bot-specific text channel exists
             self.bot_text_channel = self.retrieve_bot_text_channel(guild)
             if not self.bot_text_channel:
-                self.logger.warning(f'No text channel named "{self.bot_text_channel_name}" exists on the "{guild}" '
-                                    f'discord server. No messages will be sent by the bot until this channel exists')
+                self.logger.warning(
+                    f'No text channel named "{self.bot_text_channel_name}" exists on the "{guild}" '
+                    'discord server. No messages will be sent by the bot until this channel exists')
 
     async def on_guild_channel_delete(self, channel):
+        """
+        Called when a channel is deleted
+        """
         # if bot text channel is deleted
         if channel == self.bot_text_channel:
             self.logger.warning(f'Bot text channel "{self.bot_text_channel}" '
@@ -140,25 +154,37 @@ class Bot(commands.Bot):
 
             # there is
             if self.bot_text_channel:
-                self.logger.info('Found another text channel that matches bot text channel definition: '
-                                 f'"{self.bot_text_channel}" (id: {self.bot_text_channel.id})')
+                self.logger.info(
+                    'Found another text channel that matches bot text channel definition: '
+                    f'"{self.bot_text_channel}" (id: {self.bot_text_channel.id})')
             # there isn't
             else:
-                self.logger.warning(f'No messages will be sent by the bot until this channel exists again')
+                self.logger.warning(
+                    'No messages will be sent by the bot until this channel exists again')
 
     async def on_guild_channel_create(self, channel):
+        """
+        Called when a server channel is created
+        """
         # if bot text channel doesn't exist yet
         if not self.bot_text_channel \
                 and isinstance(channel, discord.TextChannel) \
                 and channel.name == self.bot_text_channel_name:
-            self.logger.info(f'Newly created text channel matches bot text channel definition.')
+            self.logger.info('Newly created text channel matches bot text channel definition.')
             self.bot_text_channel = channel
 
     async def on_error(self, event, *args, **kwargs):
+        """
+        Called when an error/exception occurs during bot/command execution
+        """
         # all uncaught/unhandled exceptions come through here
-        self.logger.exception(f'When handling event: {event}, with arguments: {args}\n{sys.exc_info()[2]}')
+        self.logger.exception(
+            f'When handling event: {event}, with arguments: {args}\n{sys.exc_info()[2]}')
 
     async def on_command_error(self, ctx, exception):
+        """
+        Called when an error occurs when executing a command
+        """
         # ignore non-existent commands
         if isinstance(exception, commands.CommandNotFound):
             return
@@ -175,7 +201,7 @@ class Bot(commands.Bot):
         """
         image_read = Image.open(image)
         image_color = image_read.resize((1, 1)).getpixel((0, 0))  # average pixel color
-        image_color = image_color[:-1] if len(image_color) > 3 else image_color  # may contain alpha value
+        image_color = image_color[:-1] if len(image_color) > 3 else image_color  # alpha value
         return discord.Color.from_rgb(*image_color)
 
     @property
@@ -210,7 +236,7 @@ class Bot(commands.Bot):
 
     async def send_message(self, ctx, *args, **kwargs):
         """
-        Sends message to bot_text_channel or to the private channel where the command was called from
+        Sends message to bot_text_channel or to private channel where the command was called from
         """
         if isinstance(ctx.channel, (discord.DMChannel, discord.GroupChannel)):
             channel = ctx.channel

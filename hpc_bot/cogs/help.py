@@ -30,22 +30,33 @@ except ImportError:
 
 
 class Help(commands.MinimalHelpCommand):
-
+    """
+    Help Command
+    """
     def __init__(self, **options):
         # don't check checks, send help as private message
         super().__init__(verify_checks=False, dm_help=True, **options)
 
     def get_opening_note(self):
-        bot_text_channel = self.cog.bot.bot_text_channel.mention if self.cog.bot.bot_text_channel else None
-        return f'This bot provides some commands that can retrieve ' \
-               f'information from the hpc server it is associated with.\n' \
-               f'Most commands output to the defined bot text channel ({bot_text_channel}).\n\n' \
-               f'Commands can be called by typing:   `{self.clean_prefix}[command]`\n' \
-               f'To get info on a certain command:     `{self.clean_prefix}{self.invoked_with} [command]`\n\n' \
-               f'You can also send commands to the bot as private messages, in which case the ' \
-               f'output of the command will be sent directly to you.'
+        """
+        Defines the message at the top of help command when called without parameters
+        """
+        if self.cog.bot.bot_text_channel:
+            bot_text_channel = self.cog.bot.bot_text_channel.mention
+        else:
+            bot_text_channel = None
+        return 'This bot provides some commands that can retrieve information from the hpc ' \
+               'server it is associated with.\nMost commands output to the defined ' \
+               f'bot text channel ({bot_text_channel}).\n\nCommands can be called by typing:   ' \
+               f'`{self.clean_prefix}[command]`\nTo get info on a certain command:     ' \
+               f'`{self.clean_prefix}{self.invoked_with} [command]`\n\nYou can also send commands' \
+               ' to the bot as private messages, in which case the output of the command will be ' \
+               'sent directly to you.'
 
     def add_bot_commands_formatting(self, commands_, heading):
+        """
+        Formats how each command looks when calling help without parameters
+        """
         if commands_:
             joined = '\u2002'.join(c.name for c in commands_)
             self.paginator.add_line('__**%s**__:' % heading)
@@ -54,12 +65,21 @@ class Help(commands.MinimalHelpCommand):
             self.paginator.add_line('```')
 
     def get_command_signature(self, command):
+        """
+        Formats how to call the help command
+        """
         return f'`{self.clean_prefix}{command.qualified_name} {command.signature}`'
 
     def command_not_found(self, command_name):
+        """
+        When command is not found
+        """
         return f'No command called `{command_name}` found'
 
     def subcommand_not_found(self, command_, command_name):
+        """
+        When subcommand is not found
+        """
         if isinstance(command_, commands.Group) and len(command_.all_commands) > 0:
             return f'Command `{command_.qualified_name}` has no subcommand named {command_name}'
         return f'Command `{command_.qualified_name}` has no subcommands.'

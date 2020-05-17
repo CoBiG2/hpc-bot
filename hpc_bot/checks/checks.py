@@ -23,15 +23,28 @@ Command checks
 import discord
 
 
+##################
+# HELPER FUNCTIONS
+##################
+
+
 async def info_message(ctx, user, channel, what):
-    # can write to channel where command originated?
+    """
+    Sends info message to channel where command originated if bot has permission to do it
+    """
     if await can_write_to_origin_channel(user)(ctx):
 
         # send info message
         if what == 'no_channel':
             await ctx.send(f"Error: Channel `{channel.name}` doesn't exist. Please create it.")
         elif what == 'no_permission':
-            await ctx.send(f"Error: Can't send messages to channel `{channel.name}`. Check bot permissions.")
+            await ctx.send("Error: Can't send messages to channel "
+                           f'`{channel.name}`. Check bot permissions.')
+
+
+########
+# CHECKS
+########
 
 
 def can_write_to_origin_channel(user):
@@ -68,7 +81,7 @@ def can_write_to_bot_text_channel():
 
         # if, for some reason, the bot couldn't find out for himself that the bot channel
         # doesn't exist or was deleted, this is a redundant check
-        channel_found = discord.utils.get(guild.text_channels, name=channel.name)  # does channel exist
+        channel_found = discord.utils.get(guild.text_channels, name=channel.name)
         if not channel_found:
             await info_message(ctx, me, channel, 'no_channel')
             return False

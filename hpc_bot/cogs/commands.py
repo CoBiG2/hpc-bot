@@ -24,8 +24,8 @@ import asyncio
 import logging
 import signal
 import traceback
-import discord
 from functools import partial
+import discord
 from discord.ext import commands
 
 try:
@@ -35,28 +35,37 @@ except ImportError:
 
 
 class Commands(commands.Cog):
-
+    """
+    Main Cog. Contains all bot commands
+    """
     def __init__(self, bot):
         super().__init__()
         self.bot = bot
         self.logger = logging.getLogger('hpc-bot.Commands')
 
     async def cog_before_invoke(self, ctx):
-        """Called before each command invocation"""
+        """
+        Called before each command invocation
+        """
         user = ctx.author
         self.logger.info(f'Calling command: {ctx.command}, '
                          f'by user: {user}, nickname: {user.display_name}, '
                          f'from channel: {ctx.channel}')
 
     async def cog_command_error(self, ctx, error):
-        """Called when an error is raised inside this cog"""
+        """
+        Called when an error is raised inside this cog
+        """
         if isinstance(error, (commands.MaxConcurrencyReached, commands.CheckFailure)):
             self.logger.warning(f'When calling command {ctx.command.name}: {error}')
         else:
-            self.logger.error(f'Error calling command {ctx.command.name}:\n{traceback.format_exc()}')
+            self.logger.error(
+                f'Error calling command {ctx.command.name}:\n{traceback.format_exc()}')
 
     async def command_finished_ok(self, ctx, msg=None):
-        """Commands can call this when finished"""
+        """
+        Commands can call this when finished
+        """
         # can send feedback message to channel where command originated?
         me = ctx.guild.me if ctx.guild is not None else ctx.bot.user
         can_write_to_origin_channel = checks.can_write_to_origin_channel(me)
@@ -74,7 +83,9 @@ class Commands(commands.Cog):
             await message_ok.delete(delay=30)
 
     async def handle_command_runtime(self, cmd_runtime, **kwargs):
-        """Adds command runtime to sent message"""
+        """
+        Adds command runtime to sent message
+        """
         embed = kwargs.get('embed')
         embed.description = f'ran in {cmd_runtime}s'
         await kwargs.get('message_sent').edit(embed=embed)
@@ -92,7 +103,9 @@ class Commands(commands.Cog):
         ).set_footer(
             text=f'🖥️ {ctx.command.name}'
         )
-        await self.bot.send_message(ctx, f'this is a test message from bot "{self.bot.bot_name(ctx)}"', embed=embed)
+        await self.bot.send_message(ctx,
+                                    f'this is a test message from bot "{self.bot.bot_name(ctx)}"',
+                                    embed=embed)
         await self.command_finished_ok(ctx)
 
     @commands.command()
@@ -135,7 +148,8 @@ class Commands(commands.Cog):
             what command output to expect
         """
         if cmd_output == 'cpu_and_time':
-            uptime = '\n'.join(line[line.find('up ')+3:line.find('user')].rsplit(',', maxsplit=1)[0].split(', '))
+            uptime = '\n'.join(
+                line[line.find('up ')+3:line.find('user')].rsplit(',', maxsplit=1)[0].split(', '))
             cpu = line[line.rfind('load average: ')+14:].split(', ')  # 1, 5 and 15 minutes average
             await kwargs.get('message_sent').edit(
                 embed=kwargs.get('embed').add_field(
@@ -185,7 +199,9 @@ class Commands(commands.Cog):
                     inline=True))
 
     async def new_status_embed(self, ctx):
-        """Generates a new default embed for the status command"""
+        """
+        Generates a new default embed for the status command
+        """
         bot_color = await self.bot.get_color()
         return discord.Embed(
             title="🎚️ server status",
@@ -232,7 +248,9 @@ class Commands(commands.Cog):
                 name=user, value=usage, inline=True))
 
     async def new_home_embed(self, ctx):
-        """Generates a new default embed for the home command"""
+        """
+        Generates a new default embed for the home command
+        """
         bot_color = await self.bot.get_color()
         return discord.Embed(
             title="🏠 size of each home folder",
@@ -287,8 +305,8 @@ class Commands(commands.Cog):
                 return True
 
             # errors
-            _, stderr = await process.communicate()  # wait for command to terminate and finish reading stderr
-            stderr = stderr.decode("utf-8").rstrip().rsplit("\n", 1)[0]  # remove runtime from last line
+            _, stderr = await process.communicate()  # wait for command to finish and read stderr
+            stderr = stderr.decode("utf-8").rstrip().rsplit("\n", 1)[0]  # remove runtime from end
 
             # signal terminated
             if process.returncode < 0:
@@ -308,6 +326,7 @@ class Commands(commands.Cog):
             if message_sent:
                 await message_sent.delete()
 
-            self.logger.error(f'Error code {process.returncode} while running command: {ctx.command.name} ({cmd})\n'
-                              f'{stderr}')
+            self.logger.error(
+                f'Error code {process.returncode} while running command: '
+                f'{ctx.command.name} ({cmd})\n{stderr}')
             return False

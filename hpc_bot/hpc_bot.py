@@ -64,11 +64,13 @@ def config_parser(cli, cli_parsed):
         cli_parsed.nickname = configs['nickname']
     if 'avatar' in configs and cli_parsed.avatar == cli.get_default('avatar'):
         cli_parsed.avatar = configs['avatar']
-    if 'bot_text_channel' in configs and cli_parsed.bot_text_channel == cli.get_default('bot_text_channel'):
+    if 'bot_text_channel' in configs and cli_parsed.bot_text_channel == cli.get_default(
+            'bot_text_channel'):
         cli_parsed.bot_text_channel = configs['bot_text_channel']
     if 'log' in configs and cli_parsed.log == cli.get_default('log'):
         cli_parsed.log = os.path.abspath(os.path.expanduser(configs['log']))
-        if os.path.exists(cli_parsed.log) and os.path.isdir(cli_parsed.log):  # logging handles files directly
+        # logging handles files directly
+        if os.path.exists(cli_parsed.log) and os.path.isdir(cli_parsed.log):
             cli_parsed.log = os.path.join(cli_parsed.log, 'bot.log')  # append file to log path
 
     return cli_parsed
@@ -132,13 +134,14 @@ def main():
     # logging stuff
     log_stderr_handler = logging.StreamHandler(sys.stderr)
     log_file_handler = logging.FileHandler(filename=cli.log, encoding='utf-8', mode='a')
-    log_file_handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
+    log_file_handler.setFormatter(logging.Formatter(
+        '%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
     logging.basicConfig(level=logging.INFO, handlers=[log_stderr_handler, log_file_handler])
     logger = logging.getLogger('hpc-bot.main')
 
     # log arguments
     args = copy.deepcopy(vars(cli))
-    hashed_token = hashlib.sha256(args['token'].encode()).hexdigest()  # token is hashed, for log privacy
+    hashed_token = hashlib.sha256(args['token'].encode()).hexdigest()  # keep token private in log
     args['token'] = f'sha256({hashed_token})'
     for arg, value in args.items():
         logger.info(f'Parameter:{arg}={value}')

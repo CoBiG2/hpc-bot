@@ -17,7 +17,5 @@
 # along with hpc-bot. If not, see <http://www.gnu.org/licenses/>.
 
 """
-Checks - checks for commands
+hpc-bot
 """
-
-from .checks import *
