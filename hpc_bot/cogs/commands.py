@@ -148,16 +148,15 @@ class Commands(commands.Cog):
             what command output to expect
         """
         if cmd_output == 'cpu_and_time':
-            uptime = '\n'.join(
-                line[line.find('up ')+3:line.find('user')].rsplit(',', maxsplit=1)[0].split(', '))
+            uptime = line[line.find('up ')+3:line.find('user')].rsplit(',', maxsplit=1)[0]
             cpu = line[line.rfind('load average: ')+14:].split(', ')  # 1, 5 and 15 minutes average
             await kwargs.get('message_sent').edit(
                 embed=kwargs.get('embed').add_field(
-                    name='UP time 🕒',
+                    name='🕒 UP time',
                     value=uptime,
                     inline=True
                 ).add_field(
-                    name='CPU 🎛️',
+                    name='🎛️ CPU',
                     value=f'1min : {cpu[0]}\n'
                           f'5min : {cpu[1]}\n'
                           f'15min : {cpu[2]}',
@@ -170,7 +169,7 @@ class Commands(commands.Cog):
                 _, ram_total, ram_used, ram_free, _, ram_cache, ram_available = line_contents
                 await kwargs.get('message_sent').edit(
                     embed=kwargs.get('embed').add_field(
-                        name='RAM 🧠',
+                        name='🧠 RAM',
                         value=f'total : {ram_total}\n'
                               f'used : {ram_used}\n'
                               f'free : {ram_free}\n'
@@ -181,21 +180,20 @@ class Commands(commands.Cog):
                 _, swap_total, swap_used, swap_free = line_contents
                 await kwargs.get('message_sent').edit(
                     embed=kwargs.get('embed').add_field(
-                        name='SWAP 📼',
+                        name='📼 SWAP',
                         value=f'total : {swap_total}\n'
                               f'used : {swap_used}\n'
-                              f'free : {swap_free}\n',
+                              f'free : {swap_free}',
                         inline=True))
 
         elif cmd_output == 'disk_usage':
             _, disk_size, disk_used, disk_available, disk_use_percentage, _ = line.split()
             await kwargs.get('message_sent').edit(
                 embed=kwargs.get('embed').add_field(
-                    name='STORAGE 🖴',
+                    name='🖴 STORAGE',
                     value=f'size : {disk_size}\n'
                           f'available : {disk_available}\n'
-                          f'used : {disk_used}\n'
-                          f'used % : {disk_use_percentage}\n',
+                          f'used : {disk_used} ({disk_use_percentage})',
                     inline=True))
 
     async def new_status_embed(self, ctx):
