@@ -1,4 +1,4 @@
-.PHONY: help install-conda install-python upgrade-pip install-dependencies lint
+.PHONY: help install-conda install-python upgrade-pip install-dependencies lint update
 
 help:
 	@echo ""
@@ -8,6 +8,7 @@ help:
 	@echo "upgrade-pip                  upgrades pip and setuptools to latest version"
 	@echo "install-dependencies         installs dependencies (including dev)"
 	@echo "lint                         check code style (lint)"
+	@echo "update                       installs current code with pip and restarts systemd service"
 
 install-conda:
 	@wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
@@ -25,3 +26,9 @@ install-dependencies:
 
 lint:
 	@python -m pylint hpc_bot setup.py
+
+update:
+	@systemctl --user stop hpc-bot.service
+	@python -m pip install . --user --upgrade
+	@systemctl --user daemon-reload
+	@systemctl --user start hpc-bot.service
