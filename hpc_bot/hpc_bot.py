@@ -28,7 +28,7 @@ __author__ = 'Pedro HC David, https://github.com/Kronopt'
 __credits__ = ['Pedro HC David', 'Francisco Pina Martins']
 __copyright__ = 'Copyright Pedro HC David & Francisco Pina Martins 2020'
 __license__ = 'GPLv3'
-__version__ = '0.1.0a1'
+__version__ = '0.1.1'
 __url__ = 'https://github.com/CoBiG2/hpc-bot'
 __description__ = 'A discord bot to relay HPC information.'
 
