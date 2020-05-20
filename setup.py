@@ -44,8 +44,7 @@ def dynamic_datafiles():
     required.
     """
 
-    config_file = ('etc/hpc_bot', ['hpc_bot/config/config'])
-    data_files = [config_file]
+    data_files = []
 
     if sys.platform == 'linux':
         service_file = 'hpc_bot/systemd/hpc-bot.service'
