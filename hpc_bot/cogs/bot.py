@@ -193,6 +193,29 @@ class Bot(commands.Bot):
     # METHODS
     #########
 
+    async def invoke(self, ctx):
+        """
+        Based on the original invoke method
+        Changed to force the help command to only be invoked by mentioning the bot
+        """
+        if ctx.command is not None:
+            # ignore help command if used with a prefix other than a bot mention
+            if not (ctx.command.name == 'help' and
+                    ctx.prefix not in [ctx.bot.user.mention + ' ', f'<@!{ctx.bot.user.id}> ']):
+                self.dispatch('command', ctx)
+                try:
+                    if await self.can_run(ctx, call_once=True):
+                        await ctx.command.invoke(ctx)
+                except commands.errors.CommandError as exc:
+                    await ctx.command.dispatch_error(ctx, exc)
+                else:
+                    self.dispatch('command_completion', ctx)
+            else:
+                print("HELP COMMAND WITH NON MENTION PREFIX")
+        elif ctx.invoked_with:
+            exc = commands.errors.CommandNotFound(f'Command "{ctx.invoked_with}" was not found')
+            self.dispatch('command_error', ctx, exc)
+
     @staticmethod
     def update_color(image):
         """
