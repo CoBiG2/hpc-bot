@@ -67,6 +67,9 @@ def config_parser(cli, cli_parsed):
     if 'bot_text_channel' in configs and cli_parsed.bot_text_channel == cli.get_default(
             'bot_text_channel'):
         cli_parsed.bot_text_channel = configs['bot_text_channel']
+    if 'command_prefix' in configs and cli_parsed.command_prefix == cli.get_default(
+            'command_prefix'):
+        cli_parsed.command_prefix = configs['command_prefix']
     if 'log' in configs and cli_parsed.log == cli.get_default('log'):
         cli_parsed.log = os.path.abspath(os.path.expanduser(configs['log']))
         # logging handles files directly
@@ -102,6 +105,11 @@ def arguments_handler():
                      dest='bot_text_channel',
                      help='Text channel where bot will send its messages. Default is "hpc-bots"',
                      default='hpc-bots')
+    cli.add_argument('-p',
+                     dest='command_prefix',
+                     help='Prefix string that indicates if a message sent by a user is a command. '
+                          'If omitted, only bot mentions will trigger command calls',
+                     default='')
     cli.add_argument('-l',
                      dest='log',
                      help='Log file path. If file exists, logs will be appended to it. '
@@ -153,6 +161,7 @@ def main():
         nickname=cli.nickname,
         avatar_path=cli.avatar,
         bot_text_channel_name=cli.bot_text_channel,
+        prefix=cli.command_prefix
     )
     bot.run(cli.token)
     logger.info('Shutting down bot complete')

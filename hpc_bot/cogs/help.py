@@ -45,13 +45,22 @@ class Help(commands.MinimalHelpCommand):
             bot_text_channel = self.cog.bot.bot_text_channel.mention
         else:
             bot_text_channel = None
+        prefix = self.cog.bot.prefix
+
+        if prefix:
+            prefix_help = 'If there are more hpc bots on the server you can call the same command' \
+                          f' simultaneously on all of them\nby using the prefix `{prefix}`, ' \
+                          f'like so:  `{prefix}<command>`\n\n'
+        else:
+            prefix_help = ''
+
         return 'This bot provides some commands that can retrieve information from the hpc ' \
                'server it is associated with.\nMost commands output to the defined ' \
-               f'bot text channel ({bot_text_channel}).\n\nCommands can be called by typing:   ' \
-               f'`{self.clean_prefix}[command]`\nTo get info on a certain command:     ' \
-               f'`{self.clean_prefix}{self.invoked_with} [command]`\n\nYou can also send commands' \
-               ' to the bot as private messages, in which case the output of the command will be ' \
-               'sent directly to you.'
+               f'bot text channel ({bot_text_channel}).\n\nCommands can be called by typing:  ' \
+               f'`{self.clean_prefix}<command>`\nTo get help on a certain command:   ' \
+               f'`{self.clean_prefix}{self.invoked_with} <command>`\n\n{prefix_help}' \
+               'You can also send commands to the bot as private messages, in which case the ' \
+               'output of the command will be sent directly to you.'
 
     def add_bot_commands_formatting(self, commands_, heading):
         """

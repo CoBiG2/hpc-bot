@@ -37,8 +37,12 @@ class Bot(commands.Bot):
     """
     hpc-bot main bot class
     """
-    def __init__(self, nickname, avatar_path, bot_text_channel_name, *args, **kwargs):
-        super().__init__(command_prefix=commands.when_mentioned, *args, **kwargs)
+    def __init__(self, nickname, avatar_path, bot_text_channel_name, prefix, *args, **kwargs):
+        if prefix:
+            command_prefix = commands.when_mentioned_or(prefix)
+        else:
+            command_prefix = commands.when_mentioned
+        super().__init__(command_prefix=command_prefix, *args, **kwargs)
 
         # logger
         self.logger = logging.getLogger('hpc-bot.Bot')
@@ -53,6 +57,7 @@ class Bot(commands.Bot):
         self.avatar_path = avatar_path
         self.bot_text_channel_name = bot_text_channel_name
         self.bot_text_channel = None
+        self.prefix = prefix
         self.avatar_hash = None
         self.color = None
 
@@ -210,8 +215,6 @@ class Bot(commands.Bot):
                     await ctx.command.dispatch_error(ctx, exc)
                 else:
                     self.dispatch('command_completion', ctx)
-            else:
-                print("HELP COMMAND WITH NON MENTION PREFIX")
         elif ctx.invoked_with:
             exc = commands.errors.CommandNotFound(f'Command "{ctx.invoked_with}" was not found')
             self.dispatch('command_error', ctx, exc)
