@@ -37,7 +37,7 @@ A repository to host code to build a discord bot
       -a AVATAR             Bot avatar image path (only .jpeg or .png). Sets bot avatar. Ignoring this argument will leave your bot's avatar unchanged
       -tc BOT_TEXT_CHANNEL  Text channel where bot will send its messages. Default is "hpc-bots"
       -p COMMAND_PREFIX     Prefix string that indicates if a message sent by a user is a command. If omitted, only bot mentions will trigger command calls
-      -l LOG                Log file path. If file exists, logs will be appended to it. Default is "./bot.log"
+      -l LOG                Log file path. If path is a folder, "bot.log" file will be created inside it. If path is an existing file, logs will be appended to it. Default is "./bot.log"
       -c CONFIG             Config file path. Bot parameters will be loaded from config file. Command line arguments take precedence over config parameters.
     ```
 

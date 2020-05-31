@@ -98,14 +98,12 @@ class Bot(commands.Bot):
                 await self.change_bot_presence(guild)
 
             # bot avatar
-            if self.avatar_path:
-                # if image path was defined
+            if self.avatar_path:  # if image path was defined
                 with open(self.avatar_path, 'rb') as avatar_image:
                     self.logger.info(f'Setting avatar to "{self.avatar_path}"')
                     await self.user.edit(avatar=avatar_image.read())
                 avatar = self.avatar_path
-            else:
-                # fetch avatar image if no local image path was defined
+            else:  # fetch avatar image if no local image path was defined
                 avatar = await self.user.avatar_url_as(format='png').read()
                 avatar = BytesIO(avatar)
 

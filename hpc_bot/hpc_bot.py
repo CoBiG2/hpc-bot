@@ -39,6 +39,7 @@ import hashlib
 import json
 import logging
 import os
+import pathlib
 import socket
 import sys
 
@@ -48,14 +49,22 @@ except ImportError:
     import hpc_bot.cogs as cogs
 
 
+def path_argument(string):
+    """returns a Path or None"""
+    if string is not None:
+        return pathlib.Path(string).expanduser().resolve()
+
+
 def config_parser(cli, cli_parsed):
     """
     Parses the config file and modifies options accordingly
 
     cli holds all the arguments metadata
     cli_parsed holds the parsed arguments
+
+    assumes cli_parsed.config is an os.PathLike object
     """
-    with open(os.path.abspath(cli_parsed.config)) as config_data:
+    with open(cli_parsed.config) as config_data:
         configs = json.load(config_data)
 
     if 'token' in configs and cli_parsed.token == cli.get_default('token'):
@@ -63,7 +72,7 @@ def config_parser(cli, cli_parsed):
     if 'nickname' in configs and cli_parsed.nickname == cli.get_default('nickname'):
         cli_parsed.nickname = configs['nickname']
     if 'avatar' in configs and cli_parsed.avatar == cli.get_default('avatar'):
-        cli_parsed.avatar = configs['avatar']
+        cli_parsed.avatar = path_argument(configs['avatar'])
     if 'bot_text_channel' in configs and cli_parsed.bot_text_channel == cli.get_default(
             'bot_text_channel'):
         cli_parsed.bot_text_channel = configs['bot_text_channel']
@@ -71,10 +80,10 @@ def config_parser(cli, cli_parsed):
             'command_prefix'):
         cli_parsed.command_prefix = configs['command_prefix']
     if 'log' in configs and cli_parsed.log == cli.get_default('log'):
-        cli_parsed.log = os.path.abspath(os.path.expanduser(configs['log']))
+        cli_parsed.log = path_argument(configs['log'])
         # logging handles files directly
-        if os.path.exists(cli_parsed.log) and os.path.isdir(cli_parsed.log):
-            cli_parsed.log = os.path.join(cli_parsed.log, 'bot.log')  # append file to log path
+        if cli_parsed.log.exists() and cli_parsed.log.is_dir():
+            cli_parsed.log = cli_parsed.log.joinpath('bot.log')  # append file to log path
 
     return cli_parsed
 
@@ -90,7 +99,7 @@ def arguments_handler():
                      dest='token',
                      help='Bot token. REQUIRED. Get one here: \
                            https://discordapp.com/developers/applications/me',
-                     default='')
+                     default=None)
     cli.add_argument('-n',
                      dest='nickname',
                      help='Bot nickname. Default is computer host name (in this case: '
@@ -100,7 +109,8 @@ def arguments_handler():
                      dest='avatar',
                      help="Bot avatar image path (only .jpeg or .png). Sets bot avatar. "
                           "Ignoring this argument will leave your bot's avatar unchanged",
-                     default='')
+                     type=path_argument,
+                     default=None)
     cli.add_argument('-tc',
                      dest='bot_text_channel',
                      help='Text channel where bot will send its messages. Default is "hpc-bots"',
@@ -109,17 +119,20 @@ def arguments_handler():
                      dest='command_prefix',
                      help='Prefix string that indicates if a message sent by a user is a command. '
                           'If omitted, only bot mentions will trigger command calls',
-                     default='')
+                     default=None)
     cli.add_argument('-l',
                      dest='log',
-                     help='Log file path. If file exists, logs will be appended to it. '
+                     help='Log file path. If path is a folder, "bot.log" file will be created '
+                          'inside it. If path is an existing file, logs will be appended to it. '
                           'Default is "./bot.log"',
-                     default='bot.log')
+                     type=path_argument,
+                     default=path_argument('bot.log'))
     cli.add_argument('-c',
                      dest='config',
                      help='Config file path. Bot parameters will be loaded from config file. '
                           'Command line arguments take precedence over config parameters.',
-                     default='')
+                     type=path_argument,
+                     default=None)
     cli_parsed = cli.parse_args()
 
     if cli_parsed.config:
